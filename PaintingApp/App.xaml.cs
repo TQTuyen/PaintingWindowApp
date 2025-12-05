@@ -9,135 +9,140 @@ using PaintingApp.Extensions;
 using PaintingApp.ViewModels;
 using Windows.Storage;
 
-namespace PaintingApp
+namespace PaintingApp;
+
+public partial class App : Application
 {
-    public partial class App : Application
+    public new static App Current => (App)Application.Current;
+
+    public static IServiceProvider Services { get; private set; } = null!;
+
+    public static Window? MainWindow { get; private set; }
+
+    public App()
     {
-        public new static App Current => (App)Application.Current;
+        InitializeComponent();
 
-        public static IServiceProvider Services { get; private set; } = null!;
+        ConfigureDatabasePath();
 
-        public static Window? MainWindow { get; private set; }
+        Services = ConfigureServices();
 
-        public App()
+        Debug.WriteLine("App: Application initialized with DI container.");
+    }
+
+    private static void ConfigureDatabasePath()
+    {
+        DatabasePathProvider.Configure(() =>
         {
-            InitializeComponent();
+            var localFolder = ApplicationData.Current.LocalFolder.Path;
+            var dbPath = Path.Combine(localFolder, "app.db");
+            Debug.WriteLine($"App: Database path configured: {dbPath}");
+            return dbPath;
+        });
+    }
 
-            // Configure database path for MSIX sandboxed storage before any DbContext usage
-            ConfigureDatabasePath();
+    private static IServiceProvider ConfigureServices()
+    {
+        var services = new ServiceCollection();
 
-            Services = ConfigureServices();
+        services.AddCoreServices();
+        services.AddViewModels();
+        services.AddViews();
 
-            Debug.WriteLine("App: Application initialized with DI container.");
+        var provider = services.BuildServiceProvider();
+
+        ValidateServices(provider);
+
+        return provider;
+    }
+
+    private static void ValidateServices(IServiceProvider provider)
+    {
+        Debug.WriteLine("App: Validating registered services...");
+
+        // Validate core services
+        var navigationService = provider.GetService<INavigationService>();
+        Debug.WriteLine($"  - INavigationService: {(navigationService != null ? "✓ Registered" : "✗ Missing")}");
+
+        var dialogService = provider.GetService<IDialogService>();
+        Debug.WriteLine($"  - IDialogService: {(dialogService != null ? "✓ Registered" : "✗ Missing")}");
+
+        var themeService = provider.GetService<IThemeService>();
+        Debug.WriteLine($"  - IThemeService: {(themeService != null ? "✓ Registered" : "✗ Missing")}");
+
+        var viewModelLocator = provider.GetService<ViewModelLocator>();
+        Debug.WriteLine($"  - ViewModelLocator: {(viewModelLocator != null ? "✓ Registered" : "✗ Missing")}");
+
+        Debug.WriteLine("App: Service validation complete.");
+    }
+
+    protected override void OnLaunched(LaunchActivatedEventArgs args)
+    {
+        MainWindow = new MainWindow();
+
+        // Set up XamlRoot for DialogService after window content is loaded
+        if (MainWindow.Content is FrameworkElement rootElement)
+        {
+            rootElement.Loaded += OnRootElementLoaded;
+        }
+        else
+        {
+            // If Content is not set yet, wait for it
+            MainWindow.Activated += OnMainWindowActivated;
         }
 
-        private static void ConfigureDatabasePath()
+        MainWindow.Activate();
+
+        Debug.WriteLine("App: MainWindow activated.");
+    }
+
+    private void OnMainWindowActivated(object sender, WindowActivatedEventArgs args)
+    {
+        if (MainWindow?.Content is FrameworkElement rootElement)
         {
-            DatabasePathProvider.Configure(() =>
+            MainWindow.Activated -= OnMainWindowActivated;
+
+            if (rootElement.IsLoaded)
             {
-                var localFolder = ApplicationData.Current.LocalFolder.Path;
-                var dbPath = Path.Combine(localFolder, "app.db");
-                Debug.WriteLine($"App: Database path configured: {dbPath}");
-                return dbPath;
-            });
-        }
-
-        private static IServiceProvider ConfigureServices()
-        {
-            var services = new ServiceCollection();
-
-            services.AddCoreServices();
-            services.AddViewModels();
-            services.AddViews();
-
-            var provider = services.BuildServiceProvider();
-
-            ValidateServices(provider);
-
-            return provider;
-        }
-
-        private static void ValidateServices(IServiceProvider provider)
-        {
-            Debug.WriteLine("App: Validating registered services...");
-
-            // Validate core services
-            var navigationService = provider.GetService<INavigationService>();
-            Debug.WriteLine($"  - INavigationService: {(navigationService != null ? "✓ Registered" : "✗ Missing")}");
-
-            var dialogService = provider.GetService<IDialogService>();
-            Debug.WriteLine($"  - IDialogService: {(dialogService != null ? "✓ Registered" : "✗ Missing")}");
-
-            var viewModelLocator = provider.GetService<ViewModelLocator>();
-            Debug.WriteLine($"  - ViewModelLocator: {(viewModelLocator != null ? "✓ Registered" : "✗ Missing")}");
-
-            Debug.WriteLine("App: Service validation complete.");
-        }
-
-        protected override void OnLaunched(LaunchActivatedEventArgs args)
-        {
-            MainWindow = new MainWindow();
-
-            // Set up XamlRoot for DialogService after window content is loaded
-            if (MainWindow.Content is FrameworkElement rootElement)
-            {
-                rootElement.Loaded += OnRootElementLoaded;
+                SetupServices(rootElement);
             }
             else
             {
-                // If Content is not set yet, wait for it
-                MainWindow.Activated += OnMainWindowActivated;
-            }
-
-            MainWindow.Activate();
-
-            Debug.WriteLine("App: MainWindow activated.");
-        }
-
-        private void OnMainWindowActivated(object sender, WindowActivatedEventArgs args)
-        {
-            if (MainWindow?.Content is FrameworkElement rootElement)
-            {
-                MainWindow.Activated -= OnMainWindowActivated;
-
-                if (rootElement.IsLoaded)
-                {
-                    SetupXamlRoot(rootElement);
-                }
-                else
-                {
-                    rootElement.Loaded += OnRootElementLoaded;
-                }
+                rootElement.Loaded += OnRootElementLoaded;
             }
         }
+    }
 
-        private void OnRootElementLoaded(object sender, RoutedEventArgs e)
+    private void OnRootElementLoaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement rootElement)
         {
-            if (sender is FrameworkElement rootElement)
-            {
-                rootElement.Loaded -= OnRootElementLoaded;
-                SetupXamlRoot(rootElement);
-            }
+            rootElement.Loaded -= OnRootElementLoaded;
+            SetupServices(rootElement);
+        }
+    }
+
+    private static void SetupServices(FrameworkElement rootElement)
+    {
+        var dialogService = Services.GetService<IDialogService>();
+        if (dialogService != null)
+        {
+            dialogService.XamlRoot = rootElement.XamlRoot;
+            Debug.WriteLine("App: XamlRoot set for DialogService.");
         }
 
-        private static void SetupXamlRoot(FrameworkElement rootElement)
-        {
-            var dialogService = Services.GetService<IDialogService>();
-            if (dialogService != null)
-            {
-                dialogService.XamlRoot = rootElement.XamlRoot;
-                Debug.WriteLine("App: XamlRoot set for DialogService.");
-            }
-        }
+        var themeService = Services.GetService<IThemeService>();
+        themeService?.ApplySystemTheme();
+        Debug.WriteLine("App: System theme applied.");
+    }
 
-        public static T GetService<T>() where T : class
-        {
-            return Services.GetRequiredService<T>();
-        }
+    public static T GetService<T>() where T : class
+    {
+        return Services.GetRequiredService<T>();
+    }
 
-        public static T? GetOptionalService<T>() where T : class
-        {
-            return Services.GetService<T>();
-        }
+    public static T? GetOptionalService<T>() where T : class
+    {
+        return Services.GetService<T>();
     }
 }
