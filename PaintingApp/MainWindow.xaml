@@ -53,7 +53,7 @@
 
             <!-- Drag Region -->
             <Grid Grid.Column="3" 
-                Background="Transparent"/>
+                  Background="Transparent"/>
         </Grid>
 
         <!-- Main Content Area -->
@@ -68,12 +68,13 @@
                             CompactModeThresholdWidth="641"
                             ExpandedModeThresholdWidth="1008"
                             SelectionChanged="NavView_SelectionChanged"
-                            DisplayModeChanged="NavView_DisplayModeChanged">    
+                            DisplayModeChanged="NavView_DisplayModeChanged">
 
                 <NavigationView.MenuItems>
                     <NavigationViewItem x:Name="HomeNavItem" 
                                         Content="Home" 
-                                        Tag="Home">
+                                        Tag="Home"
+                                        ToolTipService.ToolTip="Home">
                         <NavigationViewItem.Icon>
                             <FontIcon Glyph="&#xE80F;"/>
                         </NavigationViewItem.Icon>
@@ -82,17 +83,19 @@
                     <NavigationViewItem x:Name="DrawingNavItem" 
                                         Content="Drawing" 
                                         Tag="Drawing"
-                                        IsEnabled="False">
+                                        IsEnabled="False"
+                                        ToolTipService.ToolTip="Drawing Canvas">
                         <NavigationViewItem.Icon>
-                            <FontIcon Glyph="&#xE70F;"/>
+                            <FontIcon Glyph="&#xE929;"/>
                         </NavigationViewItem.Icon>
                     </NavigationViewItem>
 
                     <NavigationViewItem x:Name="ManagementNavItem" 
                                         Content="Management" 
-                                        Tag="Management">
+                                        Tag="Management"
+                                        ToolTipService.ToolTip="Manage Boards and Templates">
                         <NavigationViewItem.Icon>
-                            <FontIcon Glyph="&#xE8B7;"/>
+                            <FontIcon Glyph="&#xE8F1;"/>
                         </NavigationViewItem.Icon>
                     </NavigationViewItem>
                 </NavigationView.MenuItems>
