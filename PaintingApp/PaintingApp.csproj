@@ -12,6 +12,9 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Assets\Logo.png" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -50,6 +53,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PaintingApp.Data\PaintingApp.Data.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Update="Assets\Logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <!--
