@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using PaintingApp.Contracts;
+using PaintingApp.Views;
 
 namespace PaintingApp;
 
@@ -22,7 +23,14 @@ public sealed partial class MainWindow : Window
         _navigationService = App.GetService<INavigationService>();
         _navigationService.Frame = ContentFrame;
 
+        RegisterPages();
+
         ContentFrame.Navigated += OnFrameNavigated;
+    }
+
+    private void RegisterPages()
+    {
+        _navigationService.RegisterPage("Management", typeof(ManagementView));
     }
 
     private void SetupMicaBackdrop()
@@ -53,6 +61,10 @@ public sealed partial class MainWindow : Window
         if (args.SelectedItemContainer is NavigationViewItem selectedItem)
         {
             var tag = selectedItem.Tag?.ToString();
+            if (!string.IsNullOrEmpty(tag))
+            {
+                _navigationService.NavigateTo(tag);
+            }
         }
     }
 

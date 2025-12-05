@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PaintingApp.Contracts;
 using PaintingApp.Services;
 using PaintingApp.ViewModels;
+using PaintingApp.Views;
 
 namespace PaintingApp.Extensions
 {
@@ -19,11 +20,15 @@ namespace PaintingApp.Extensions
 
         public static IServiceCollection AddViewModels(this IServiceCollection services)
         {
+            services.AddTransient<ManagementViewModel>();
+
             return services;
         }
 
         public static IServiceCollection AddViews(this IServiceCollection services)
         {
+            services.AddTransient<ManagementView>();
+
             return services;
         }
 
