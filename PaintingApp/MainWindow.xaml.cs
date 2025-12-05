@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using PaintingApp.Contracts;
+using PaintingApp.Data.Entities;
 using PaintingApp.Views;
 
 namespace PaintingApp;
@@ -11,6 +12,7 @@ namespace PaintingApp;
 public sealed partial class MainWindow : Window
 {
     private readonly INavigationService _navigationService;
+    private readonly IProfileStateService _profileStateService;
 
     public MainWindow()
     {
@@ -21,10 +23,12 @@ public sealed partial class MainWindow : Window
         SetupMicaBackdrop();
 
         _navigationService = App.GetService<INavigationService>();
+        _profileStateService = App.GetService<IProfileStateService>();
         _navigationService.Frame = ContentFrame;
 
         RegisterPages();
         SetupNavigation();
+        SetupProfileStateListener();
 
         ContentFrame.Navigated += OnFrameNavigated;
     }
@@ -32,12 +36,32 @@ public sealed partial class MainWindow : Window
     private void RegisterPages()
     {
         _navigationService.RegisterPage("Home", typeof(MainScreenView));
+        _navigationService.RegisterPage("Drawing", typeof(DrawingView));
         _navigationService.RegisterPage("Management", typeof(ManagementView));
     }
 
     private void SetupNavigation()
     {
         _navigationService.NavigateTo("Home");
+    }
+
+    private void SetupProfileStateListener()
+    {
+        _profileStateService.ProfileChanged += OnProfileChanged;
+        UpdateDrawingMenuState();
+    }
+
+    private void OnProfileChanged(object? sender, Profile? profile)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            UpdateDrawingMenuState();
+        });
+    }
+
+    private void UpdateDrawingMenuState()
+    {
+        DrawingNavItem.IsEnabled = _profileStateService.HasProfile;
     }
 
     private void SetupMicaBackdrop()

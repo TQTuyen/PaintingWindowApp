@@ -18,6 +18,7 @@ namespace PaintingApp.Extensions
             services.AddSingleton<INavigationService, NavigationService>();
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<IThemeService, ThemeService>();
+            services.AddSingleton<IProfileStateService, ProfileStateService>();
             services.AddSingleton<ViewModelLocator>();
 
             return services;
@@ -35,6 +36,7 @@ namespace PaintingApp.Extensions
         {
             services.AddTransient<MainScreenView>();
             services.AddTransient<ManagementView>();
+            services.AddTransient<DrawingView>();
 
             return services;
         }

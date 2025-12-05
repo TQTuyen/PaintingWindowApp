@@ -11,6 +11,8 @@ namespace PaintingApp.ViewModels;
 public partial class MainScreenViewModel : BaseViewModel
 {
     private readonly IProfileRepository _profileRepository;
+    private readonly IProfileStateService _profileStateService;
+    private readonly IThemeService _themeService;
 
     [ObservableProperty]
     private ObservableCollection<Profile> _profiles = new();
@@ -21,11 +23,15 @@ public partial class MainScreenViewModel : BaseViewModel
     public MainScreenViewModel(
         INavigationService navigationService,
         IDialogService dialogService,
-        IProfileRepository profileRepository)
+        IProfileRepository profileRepository,
+        IProfileStateService profileStateService,
+        IThemeService themeService)
         : base(navigationService, dialogService)
     {
         Title = "Welcome";
         _profileRepository = profileRepository;
+        _profileStateService = profileStateService;
+        _themeService = themeService;
     }
 
     public override async Task InitializeAsync()
@@ -39,10 +45,10 @@ public partial class MainScreenViewModel : BaseViewModel
         await ExecuteAsync(async () =>
         {
             var profiles = await _profileRepository.GetAllAsync();
-            _profiles.Clear();
+            Profiles.Clear();
             foreach (var profile in profiles)
             {
-                _profiles.Add(profile);
+                Profiles.Add(profile);
             }
         });
     }
@@ -54,12 +60,15 @@ public partial class MainScreenViewModel : BaseViewModel
 
         var confirmed = await DialogService.ShowConfirmationAsync(
             "Select Profile",
-            $"Do you want to continue with profile '{profile.Name}'?");
+            $"Use profile '{profile.Name}'?\n\nThis will apply the profile's theme and canvas settings.");
 
         if (confirmed)
         {
-            _selectedProfile = profile;
-            NavigationService.NavigateTo("Management", profile);
+            _profileStateService.SetProfile(profile);
+            _themeService.SetTheme(profile.Theme);
+            SelectedProfile = profile;
+
+            NavigationService.NavigateTo("Drawing");
         }
     }
 
