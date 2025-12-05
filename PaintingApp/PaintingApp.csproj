@@ -14,6 +14,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Assets\Logo.png" />
+    <None Remove="Dialogs\ProfileDialog.xaml" />
     <None Remove="Views\DrawingView.xaml" />
     <None Remove="Views\MainScreenView.xaml" />
     <None Remove="Views\ManagementView.xaml" />
@@ -74,6 +75,11 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\ManagementView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Dialogs\ProfileDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

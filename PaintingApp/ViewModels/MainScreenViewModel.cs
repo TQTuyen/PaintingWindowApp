@@ -1,10 +1,13 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml.Controls;
 using PaintingApp.Contracts;
 using PaintingApp.Data.Entities;
 using PaintingApp.Data.Repositories.Interfaces;
+using PaintingApp.Dialogs;
 
 namespace PaintingApp.ViewModels;
 
@@ -75,6 +78,44 @@ public partial class MainScreenViewModel : BaseViewModel
     [RelayCommand]
     private async Task CreateProfileAsync()
     {
-        await DialogService.ShowMessageAsync("Coming Soon", "Profile creation will be available in a future update.");
+        if (App.MainWindow?.Content?.XamlRoot == null) return;
+
+        var dialog = new ProfileDialog(_profileRepository)
+        {
+            XamlRoot = App.MainWindow.Content.XamlRoot
+        };
+
+        var result = await dialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary && dialog.Result != null)
+        {
+            await ExecuteAsync(async () =>
+            {
+                var newProfile = await _profileRepository.AddAsync(dialog.Result);
+                Profiles.Add(newProfile);
+            });
+        }
+    }
+
+    [RelayCommand]
+    private async Task EditProfileAsync(Profile? profile)
+    {
+        if (profile == null || App.MainWindow?.Content?.XamlRoot == null) return;
+
+        var dialog = new ProfileDialog(_profileRepository, profile)
+        {
+            XamlRoot = App.MainWindow.Content.XamlRoot
+        };
+
+        var result = await dialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary && dialog.Result != null)
+        {
+            await ExecuteAsync(async () =>
+            {
+                await _profileRepository.UpdateAsync(dialog.Result);
+                await LoadProfilesAsync();
+            });
+        }
     }
 }
