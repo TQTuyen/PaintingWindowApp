@@ -68,6 +68,7 @@
 
         <!-- Profile Cards Grid -->
         <GridView Grid.Row="2"
+                  x:Name="ProfileGridView"
                   ItemsSource="{x:Bind ViewModel.Profiles, Mode=OneWay}"
                   SelectionMode="None"
                   IsItemClickEnabled="True"
@@ -88,6 +89,20 @@
                             CornerRadius="8"
                             Padding="16"
                             Margin="4">
+                        <Border.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="Edit" Click="EditProfile_Click" Tag="{x:Bind}">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE70F;"/>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem Text="Delete" Click="DeleteProfile_Click" Tag="{x:Bind}">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE74D;"/>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </Border.ContextFlyout>
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>

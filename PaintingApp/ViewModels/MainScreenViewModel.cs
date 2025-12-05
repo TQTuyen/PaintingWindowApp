@@ -118,4 +118,39 @@ public partial class MainScreenViewModel : BaseViewModel
             });
         }
     }
+
+    [RelayCommand]
+    private async Task DeleteProfileAsync(Profile? profile)
+    {
+        if (profile == null) return;
+
+        var confirmed = await DialogService.ShowConfirmationAsync(
+            "Delete Profile",
+            $"Are you sure you want to delete the profile '{profile.Name}'?\n\nThis action cannot be undone and will also delete all associated drawing boards and templates.",
+            "Delete",
+            "Cancel");
+
+        if (confirmed)
+        {
+            await ExecuteAsync(async () =>
+            {
+                try
+                {
+                    await _profileRepository.DeleteAsync(profile.Id);
+                    Profiles.Remove(profile);
+
+                    // Clear selected profile if it was deleted
+                    if (SelectedProfile?.Id == profile.Id)
+                    {
+                        SelectedProfile = null;
+                        _profileStateService.ClearProfile();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await DialogService.ShowErrorAsync("Delete Failed", $"Failed to delete profile: {ex.Message}");
+                }
+            });
+        }
+    }
 }

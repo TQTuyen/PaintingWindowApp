@@ -1,3 +1,4 @@
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using PaintingApp.Data.Entities;
@@ -27,6 +28,22 @@ public sealed partial class MainScreenView : Page
         if (e.ClickedItem is Profile profile)
         {
             ViewModel.SelectProfileCommand.Execute(profile);
+        }
+    }
+
+    private void EditProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuFlyoutItem menuItem && menuItem.Tag is Profile profile)
+        {
+            ViewModel.EditProfileCommand.Execute(profile);
+        }
+    }
+
+    private void DeleteProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuFlyoutItem menuItem && menuItem.Tag is Profile profile)
+        {
+            ViewModel.DeleteProfileCommand.Execute(profile);
         }
     }
 }
