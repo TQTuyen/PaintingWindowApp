@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using PaintingApp.Contracts;
+using PaintingApp.Data;
 using PaintingApp.Extensions;
 using PaintingApp.ViewModels;
+using Windows.Storage;
 
 namespace PaintingApp
 {
@@ -20,9 +23,23 @@ namespace PaintingApp
         {
             InitializeComponent();
 
+            // Configure database path for MSIX sandboxed storage before any DbContext usage
+            ConfigureDatabasePath();
+
             Services = ConfigureServices();
 
             Debug.WriteLine("App: Application initialized with DI container.");
+        }
+
+        private static void ConfigureDatabasePath()
+        {
+            DatabasePathProvider.Configure(() =>
+            {
+                var localFolder = ApplicationData.Current.LocalFolder.Path;
+                var dbPath = Path.Combine(localFolder, "app.db");
+                Debug.WriteLine($"App: Database path configured: {dbPath}");
+                return dbPath;
+            });
         }
 
         private static IServiceProvider ConfigureServices()
