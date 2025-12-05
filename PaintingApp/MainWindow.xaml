@@ -31,7 +31,7 @@
                    Grid.Column="0"
                    Width="32"
                    Height="32"
-                   Margin="16,0"/>
+                   Margin="8,0"/>
 
             <!-- Back Button -->
             <Button x:Name="BackButton"
@@ -61,9 +61,14 @@
             <NavigationView x:Name="NavView"
                             IsBackButtonVisible="Collapsed"
                             IsSettingsVisible="True"
-                            PaneDisplayMode="Left"
-                            OpenPaneLength="200"
-                            SelectionChanged="NavView_SelectionChanged">
+                            IsPaneToggleButtonVisible="True"
+                            PaneDisplayMode="Auto"
+                            OpenPaneLength="240"
+                            CompactPaneLength="48"
+                            CompactModeThresholdWidth="641"
+                            ExpandedModeThresholdWidth="1008"
+                            SelectionChanged="NavView_SelectionChanged"
+                            DisplayModeChanged="NavView_DisplayModeChanged">    
 
                 <NavigationView.MenuItems>
                     <NavigationViewItem x:Name="HomeNavItem" 

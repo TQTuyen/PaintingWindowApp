@@ -55,4 +55,16 @@ public sealed partial class MainWindow : Window
             var tag = selectedItem.Tag?.ToString();
         }
     }
+
+    // Adjusts title bar margin when NavigationView switches to Minimal mode (hamburger button appears)
+    private void NavView_DisplayModeChanged(NavigationView sender, NavigationViewDisplayModeChangedEventArgs args)
+    {
+        AppTitleBar.Margin = new Thickness
+        {
+            Left = args.DisplayMode == NavigationViewDisplayMode.Minimal ? 48 : 0,
+            Top = 0,
+            Right = 0,
+            Bottom = 0
+        };
+    }
 }
