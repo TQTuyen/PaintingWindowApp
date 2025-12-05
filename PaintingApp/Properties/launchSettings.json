@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "PaintingApp (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "PaintingApp (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
