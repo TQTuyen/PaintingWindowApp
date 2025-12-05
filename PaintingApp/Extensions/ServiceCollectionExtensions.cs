@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using PaintingApp.Contracts;
+using PaintingApp.Services;
+using PaintingApp.ViewModels;
 
 namespace PaintingApp.Extensions
 {
@@ -7,6 +9,10 @@ namespace PaintingApp.Extensions
     {
         public static IServiceCollection AddCoreServices(this IServiceCollection services)
         {
+            services.AddSingleton<INavigationService, NavigationService>();
+            services.AddSingleton<IDialogService, DialogService>();
+            services.AddSingleton<ViewModelLocator>();
+
             return services;
         }
 
