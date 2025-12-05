@@ -24,13 +24,20 @@ public sealed partial class MainWindow : Window
         _navigationService.Frame = ContentFrame;
 
         RegisterPages();
+        SetupNavigation();
 
         ContentFrame.Navigated += OnFrameNavigated;
     }
 
     private void RegisterPages()
     {
+        _navigationService.RegisterPage("Home", typeof(MainScreenView));
         _navigationService.RegisterPage("Management", typeof(ManagementView));
+    }
+
+    private void SetupNavigation()
+    {
+        _navigationService.NavigateTo("Home");
     }
 
     private void SetupMicaBackdrop()

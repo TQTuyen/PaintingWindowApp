@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using PaintingApp.Contracts;
@@ -27,6 +28,8 @@ public partial class App : Application
 
         Services = ConfigureServices();
 
+        InitializeDatabase();
+
         Debug.WriteLine("App: Application initialized with DI container.");
     }
 
@@ -48,6 +51,7 @@ public partial class App : Application
         services.AddCoreServices();
         services.AddViewModels();
         services.AddViews();
+        services.AddDataServices();
 
         var provider = services.BuildServiceProvider();
 
@@ -74,6 +78,24 @@ public partial class App : Application
         Debug.WriteLine($"  - ViewModelLocator: {(viewModelLocator != null ? "✓ Registered" : "✗ Missing")}");
 
         Debug.WriteLine("App: Service validation complete.");
+    }
+
+    private static void InitializeDatabase()
+    {
+        try
+        {
+            using var scope = Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            
+            Debug.WriteLine("App: Running database migrations...");
+            dbContext.Database.Migrate();
+            Debug.WriteLine("App: Database migrations completed successfully.");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"App: Database migration failed: {ex.Message}");
+            throw;
+        }
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
