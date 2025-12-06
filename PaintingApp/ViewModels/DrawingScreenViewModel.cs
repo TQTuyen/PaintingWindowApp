@@ -31,6 +31,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveBoardCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteBoardCommand))]
     private DrawingBoard? _currentBoard;
 
     [ObservableProperty]
@@ -88,6 +89,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
     }
 
     public bool CanSave => CurrentBoard != null && CurrentProfile != null;
+    public bool CanDeleteBoard => CurrentBoard != null && CurrentBoard.Id > 0;
 
     public event EventHandler? ShapesRendered;
     public event EventHandler? SelectionChanged;
@@ -277,6 +279,67 @@ public partial class DrawingScreenViewModel : BaseViewModel
                 );
             }
         });
+    }
+
+    [RelayCommand(CanExecute = nameof(CanDeleteBoard))]
+    private async Task DeleteBoardAsync()
+    {
+        if (CurrentBoard == null || CurrentBoard.Id <= 0)
+            return;
+
+        var confirmed = await DialogService.ShowConfirmationAsync(
+            "Delete Board?",
+            $"This will permanently delete \"{CurrentBoard.Name}\" and all its shapes. This action cannot be undone.",
+            "Delete",
+            "Cancel"
+        );
+
+        if (!confirmed)
+            return;
+
+        var boardId = CurrentBoard.Id;
+        var boardExists = await _drawingBoardRepository.ExistsAsync(boardId);
+
+        if (!boardExists)
+        {
+            await DialogService.ShowMessageAsync(
+                "Board Not Found",
+                "This board has already been deleted."
+            );
+            NavigateToManagement();
+            return;
+        }
+
+        await ExecuteAsync(async () =>
+        {
+            await _drawingBoardRepository.DeleteAsync(boardId);
+        },
+        onError: async ex =>
+        {
+            await DialogService.ShowErrorAsync(
+                "Delete Failed",
+                "Unable to delete the board. Please try again."
+            );
+        });
+
+        // Clear state and navigate back
+        ClearBoardState();
+        NavigateToManagement();
+    }
+
+    private void ClearBoardState()
+    {
+        CurrentBoard = null;
+        BoardName = "Untitled";
+        Shapes.Clear();
+        _deletedShapeIds.Clear();
+        HasUnsavedChanges = false;
+        SelectedShape = null;
+    }
+
+    private void NavigateToManagement()
+    {
+        NavigationService.NavigateTo("Management");
     }
 
     [RelayCommand]

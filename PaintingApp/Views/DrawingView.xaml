@@ -44,10 +44,6 @@
                         Orientation="Horizontal"
                         Spacing="8">
 
-                <TextBlock Text="Tool:"
-                           VerticalAlignment="Center"
-                           Style="{StaticResource CaptionTextBlockStyle}"/>
-
                 <DropDownButton x:Name="ToolDropDown"
                                 MinWidth="140">
                     <DropDownButton.Content>
@@ -160,6 +156,17 @@
                     </StackPanel>
                 </Button>
 
+                <Button Command="{x:Bind ViewModel.DeleteBoardCommand}"
+                        ToolTipService.ToolTip="Delete Board">
+                    <Button.Resources>
+                        <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{ThemeResource SystemFillColorCritical}"/>
+                    </Button.Resources>
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <FontIcon Glyph="&#xE74D;" FontSize="16"/>
+                        <TextBlock Text="Delete"/>
+                    </StackPanel>
+                </Button>
+
                 <Border Width="1"
                         Height="24"
                         Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
@@ -187,16 +194,12 @@
 
                 <!-- Stroke Thickness with Slider + NumberBox -->
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="Stroke:"
-                               VerticalAlignment="Center"
-                               Style="{StaticResource CaptionTextBlockStyle}"/>
-                    
                     <Slider x:Name="ThicknessSlider"
                             Value="{x:Bind ViewModel.StrokeThickness, Mode=TwoWay}"
                             Minimum="0.5"
                             Maximum="20"
                             StepFrequency="0.5"
-                            Width="100"
+                            Width="80"
                             VerticalAlignment="Center"
                             ToolTipService.ToolTip="Stroke Thickness"/>
                     
@@ -205,14 +208,12 @@
                                Maximum="50"
                                SmallChange="0.5"
                                SpinButtonPlacementMode="Compact"
-                               Width="70"/>
+                               Width="70"
+                               Height="40"/>
                 </StackPanel>
 
                 <!-- Stroke Dash Style Selector -->
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="Style:"
-                               VerticalAlignment="Center"
-                               Style="{StaticResource CaptionTextBlockStyle}"/>
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                     <ComboBox ItemsSource="{x:Bind ViewModel.AvailableDashStyles, Mode=OneWay}"
                               SelectedItem="{x:Bind ViewModel.SelectedStrokeDashStyle, Mode=TwoWay}"
                               MinWidth="110"

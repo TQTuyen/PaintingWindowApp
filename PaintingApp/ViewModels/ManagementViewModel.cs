@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -21,6 +22,11 @@ public partial class ManagementViewModel : BaseViewModel
 
     [ObservableProperty]
     private ObservableCollection<DrawingBoard> _boards = new();
+
+    [ObservableProperty]
+    private DrawingBoard? _selectedBoard;
+
+    public bool HasBoards => Boards.Count > 0;
 
     public ManagementViewModel(
         INavigationService navigationService,
@@ -87,6 +93,7 @@ public partial class ManagementViewModel : BaseViewModel
             {
                 Boards.Add(board);
             }
+            OnPropertyChanged(nameof(HasBoards));
         });
     }
 
@@ -95,5 +102,49 @@ public partial class ManagementViewModel : BaseViewModel
     {
         if (board == null) return;
         NavigationService.NavigateTo("Drawing", board.Id);
+    }
+
+    [RelayCommand]
+    private async Task DeleteBoardAsync(DrawingBoard? board)
+    {
+        if (board == null)
+            return;
+
+        var confirmed = await DialogService.ShowConfirmationAsync(
+            "Delete Board?",
+            $"This will permanently delete \"{board.Name}\" and all its shapes. This action cannot be undone.",
+            "Delete",
+            "Cancel"
+        );
+
+        if (!confirmed)
+            return;
+
+        var boardExists = await _drawingBoardRepository.ExistsAsync(board.Id);
+
+        if (!boardExists)
+        {
+            Boards.Remove(board);
+            OnPropertyChanged(nameof(HasBoards));
+            await DialogService.ShowMessageAsync(
+                "Board Not Found",
+                "This board has already been deleted."
+            );
+            return;
+        }
+
+        await ExecuteAsync(async () =>
+        {
+            await _drawingBoardRepository.DeleteAsync(board.Id);
+            Boards.Remove(board);
+            OnPropertyChanged(nameof(HasBoards));
+        },
+        onError: async ex =>
+        {
+            await DialogService.ShowErrorAsync(
+                "Delete Failed",
+                "Unable to delete the board. Please try again."
+            );
+        });
     }
 }
