@@ -91,6 +91,12 @@
                             Margin="4">
                         <Border.ContextFlyout>
                             <MenuFlyout>
+                                <MenuFlyoutItem Text="Select Profile" Click="SelectProfile_Click" Tag="{x:Bind}">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE8B7;"/>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutSeparator/>
                                 <MenuFlyoutItem Text="Edit" Click="EditProfile_Click" Tag="{x:Bind}">
                                     <MenuFlyoutItem.Icon>
                                         <FontIcon Glyph="&#xE70F;"/>

@@ -31,6 +31,14 @@ public sealed partial class MainScreenView : Page
         }
     }
 
+    private void SelectProfile_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuFlyoutItem menuItem && menuItem.Tag is Profile profile)
+        {
+            ViewModel.SelectProfileCommand.Execute(profile);
+        }
+    }
+
     private void EditProfile_Click(object sender, RoutedEventArgs e)
     {
         if (sender is MenuFlyoutItem menuItem && menuItem.Tag is Profile profile)

@@ -114,7 +114,23 @@ public partial class MainScreenViewModel : BaseViewModel
             await ExecuteAsync(async () =>
             {
                 await _profileRepository.UpdateAsync(dialog.Result);
-                await LoadProfilesAsync();
+
+                // Update ProfileStateService if the edited profile is currently active
+                if (_profileStateService.CurrentProfile?.Id == profile.Id)
+                {
+                    _profileStateService.SetProfile(dialog.Result);
+                    _themeService.SetTheme(dialog.Result.Theme);
+                }
+
+                var index = Profiles.IndexOf(profile);
+                if (index >= 0)
+                {
+                    Profiles[index] = dialog.Result;
+                }
+                else
+                {
+                    await LoadProfilesAsync();
+                }
             });
         }
     }
