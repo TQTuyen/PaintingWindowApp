@@ -10,6 +10,9 @@ namespace PaintingApp.Models;
 public abstract partial class ShapeModel : ObservableObject
 {
     [ObservableProperty]
+    private int _id;
+
+    [ObservableProperty]
     private ShapeType _type;
 
     [ObservableProperty]
@@ -26,6 +29,12 @@ public abstract partial class ShapeModel : ObservableObject
 
     [ObservableProperty]
     private bool _isSelected;
+
+    [ObservableProperty]
+    private bool _isNew = true;
+
+    [ObservableProperty]
+    private bool _isModified;
 
     public abstract List<Point> GetPoints();
 

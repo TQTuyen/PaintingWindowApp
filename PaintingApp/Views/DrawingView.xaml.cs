@@ -24,6 +24,8 @@ public sealed partial class DrawingView : Page
     private readonly ShapeTransformerProvider _transformerProvider;
     private readonly ShapeResizerProvider _resizerProvider;
     private readonly ResizeHandleManager _handleManager;
+    private readonly IDialogService _dialogService;
+    private readonly INavigationService _navigationService;
 
     private bool _isDrawing;
     private Point _startPoint;
@@ -39,6 +41,8 @@ public sealed partial class DrawingView : Page
     private ResizeHandle _activeHandle;
     private Point _resizeStartPoint;
 
+    private bool _isNavigatingAway;
+
     public DrawingView()
     {
         InitializeComponent();
@@ -48,6 +52,8 @@ public sealed partial class DrawingView : Page
         _transformerProvider = App.GetService<ShapeTransformerProvider>();
         _resizerProvider = App.GetService<ShapeResizerProvider>();
         _handleManager = App.GetService<ResizeHandleManager>();
+        _dialogService = App.GetService<IDialogService>();
+        _navigationService = App.GetService<INavigationService>();
         DataContext = ViewModel;
 
         ViewModel.ShapesRendered += OnShapesRendered;
@@ -56,6 +62,7 @@ public sealed partial class DrawingView : Page
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        _isNavigatingAway = false;
         await ViewModel.InitializeAsync();
 
         if (e.Parameter is int boardId && boardId > 0)
@@ -75,6 +82,52 @@ public sealed partial class DrawingView : Page
         {
             ViewModel.SelectedShape.PropertyChanged -= SelectedShape_PropertyChanged;
         }
+    }
+
+    protected override async void OnNavigatingFrom(NavigatingCancelEventArgs e)
+    {
+        if (_isNavigatingAway || !ViewModel.HasUnsavedChanges)
+        {
+            base.OnNavigatingFrom(e);
+            return;
+        }
+
+        e.Cancel = true;
+
+        var targetPageType = e.SourcePageType;
+        var navigationParameter = e.Parameter;
+
+        var result = await _dialogService.ShowThreeButtonDialogAsync(
+            "Unsaved Changes",
+            "You have unsaved changes. Do you want to save before leaving?",
+            "Save",
+            "Don't Save",
+            "Cancel"
+        );
+
+        if (result == 1) // Save
+        {
+            await ViewModel.SaveSilentlyAsync();
+            
+            _isNavigatingAway = true;
+            ViewModel.HasUnsavedChanges = false;
+            
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                _navigationService.NavigateTo(targetPageType, navigationParameter);
+            });
+        }
+        else if (result == 2) // Don't Save
+        {
+            _isNavigatingAway = true;
+            ViewModel.HasUnsavedChanges = false;
+            
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                _navigationService.NavigateTo(targetPageType, navigationParameter);
+            });
+        }
+        // Cancel (result == 0) - do nothing, stay on page
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -99,7 +152,7 @@ public sealed partial class DrawingView : Page
         {
             RenderAllShapes();
             ShowSelectionAdorner(shape);
-            ViewModel.HasUnsavedChanges = true;
+            ViewModel.MarkShapeModified(shape);
         }
     }
 
@@ -260,7 +313,12 @@ public sealed partial class DrawingView : Page
         {
             _isResizingShape = false;
             _activeHandle = ResizeHandle.None;
-            ViewModel.HasUnsavedChanges = true;
+
+            if (ViewModel.SelectedShape != null)
+            {
+                ViewModel.MarkShapeModified(ViewModel.SelectedShape);
+            }
+
             DrawingCanvas.ReleasePointerCapture(e.Pointer);
             return;
         }
@@ -268,8 +326,13 @@ public sealed partial class DrawingView : Page
         if (_isDraggingShape)
         {
             _isDraggingShape = false;
+
+            if (_draggedShape != null)
+            {
+                ViewModel.MarkShapeModified(_draggedShape);
+            }
+
             _draggedShape = null;
-            ViewModel.HasUnsavedChanges = true;
             DrawingCanvas.ReleasePointerCapture(e.Pointer);
             return;
         }
@@ -388,7 +451,7 @@ public sealed partial class DrawingView : Page
     private void PropertiesPanel_ShapePropertyChanged(object sender, ShapeModel shape)
     {
         RenderAllShapes();
-        ViewModel.HasUnsavedChanges = true;
+        ViewModel.MarkShapeModified(shape);
     }
 
     private static Color ParseColor(string hex)

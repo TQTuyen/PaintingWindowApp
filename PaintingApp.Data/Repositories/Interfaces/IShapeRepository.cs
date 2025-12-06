@@ -17,4 +17,7 @@ public interface IShapeRepository
     Task<Dictionary<ShapeType, int>> GetShapeTypeStatisticsAsync();
     Task DeleteByDrawingBoardIdAsync(int boardId);
     Task DeleteByTemplateGroupIdAsync(int templateGroupId);
+    Task BulkInsertAsync(IEnumerable<Shape> shapes);
+    Task BulkUpdateAsync(IEnumerable<Shape> shapes);
+    Task BulkDeleteAsync(IEnumerable<int> ids);
 }

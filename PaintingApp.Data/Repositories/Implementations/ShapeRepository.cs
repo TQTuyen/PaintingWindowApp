@@ -40,7 +40,18 @@ public class ShapeRepository : IShapeRepository
 
     public async Task UpdateAsync(Shape entity)
     {
-        _context.Shapes.Update(entity);
+        var trackedEntity = _context.ChangeTracker.Entries<Shape>()
+            .FirstOrDefault(e => e.Entity.Id == entity.Id);
+
+        if (trackedEntity != null)
+        {
+            trackedEntity.CurrentValues.SetValues(entity);
+        }
+        else
+        {
+            _context.Shapes.Update(entity);
+        }
+
         await _context.SaveChangesAsync();
     }
 
@@ -86,7 +97,6 @@ public class ShapeRepository : IShapeRepository
             .ToListAsync();
     }
 
-    // Groups shapes by type and returns count for each type (used for dashboard statistics)
     public async Task<Dictionary<ShapeType, int>> GetShapeTypeStatisticsAsync()
     {
         return await _context.Shapes
@@ -113,6 +123,74 @@ public class ShapeRepository : IShapeRepository
     {
         var shapes = await _context.Shapes
             .Where(s => s.TemplateGroupId == templateGroupId)
+            .ToListAsync();
+
+        if (shapes.Count > 0)
+        {
+            _context.Shapes.RemoveRange(shapes);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task BulkInsertAsync(IEnumerable<Shape> shapes)
+    {
+        var shapeList = shapes.ToList();
+        if (shapeList.Count == 0) return;
+
+        foreach (var shape in shapeList)
+        {
+            if (shape.CreatedDate == default)
+            {
+                shape.CreatedDate = DateTime.UtcNow;
+            }
+        }
+
+        await _context.Shapes.AddRangeAsync(shapeList);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task BulkUpdateAsync(IEnumerable<Shape> shapes)
+    {
+        var shapeList = shapes.ToList();
+        if (shapeList.Count == 0) return;
+
+        foreach (var shape in shapeList)
+        {
+            var trackedEntity = _context.ChangeTracker.Entries<Shape>()
+                .FirstOrDefault(e => e.Entity.Id == shape.Id);
+
+            if (trackedEntity != null)
+            {
+                trackedEntity.CurrentValues.SetValues(shape);
+            }
+            else
+            {
+                _context.Shapes.Attach(shape);
+                _context.Entry(shape).State = EntityState.Modified;
+            }
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task BulkDeleteAsync(IEnumerable<int> ids)
+    {
+        var idList = ids.ToList();
+        if (idList.Count == 0) return;
+
+        // Detach any tracked entities with these IDs first
+        var trackedEntities = _context.ChangeTracker.Entries<Shape>()
+            .Where(e => idList.Contains(e.Entity.Id))
+            .ToList();
+
+        foreach (var entry in trackedEntities)
+        {
+            entry.State = EntityState.Detached;
+        }
+
+        // Now load and delete
+        var shapes = await _context.Shapes
+            .Where(s => idList.Contains(s.Id))
             .ToListAsync();
 
         if (shapes.Count > 0)

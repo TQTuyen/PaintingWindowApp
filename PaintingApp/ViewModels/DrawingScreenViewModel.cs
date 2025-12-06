@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,6 +23,8 @@ public partial class DrawingScreenViewModel : BaseViewModel
     private readonly IDrawingBoardRepository _drawingBoardRepository;
     private readonly IShapeRepository _shapeRepository;
     private readonly ShapeAdapterProvider _adapterProvider;
+
+    private readonly List<int> _deletedShapeIds = [];
 
     [ObservableProperty]
     private Profile? _currentProfile;
@@ -159,6 +162,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
                 CanvasHeight = newBoard.Height;
                 CanvasBackgroundColor = ParseColor(newBoard.BackgroundColor);
                 Shapes.Clear();
+                _deletedShapeIds.Clear();
                 HasUnsavedChanges = false;
                 
                 RenderShapes();
@@ -168,6 +172,16 @@ public partial class DrawingScreenViewModel : BaseViewModel
 
     [RelayCommand(CanExecute = nameof(CanSave))]
     private async Task SaveBoardAsync()
+    {
+        await SaveBoardInternalAsync(showSuccessDialog: true);
+    }
+
+    public async Task SaveSilentlyAsync()
+    {
+        await SaveBoardInternalAsync(showSuccessDialog: false);
+    }
+
+    private async Task SaveBoardInternalAsync(bool showSuccessDialog)
     {
         if (CurrentBoard == null || CurrentProfile == null)
             return;
@@ -183,23 +197,72 @@ public partial class DrawingScreenViewModel : BaseViewModel
             else
             {
                 await _drawingBoardRepository.UpdateAsync(CurrentBoard);
-                await _shapeRepository.DeleteByDrawingBoardIdAsync(CurrentBoard.Id);
             }
+
+            // Handle deleted shapes
+            if (_deletedShapeIds.Count > 0)
+            {
+                await _shapeRepository.BulkDeleteAsync(_deletedShapeIds);
+                _deletedShapeIds.Clear();
+            }
+
+            // Separate new and modified shapes
+            var newShapes = new List<Shape>();
+            var modifiedShapes = new List<Shape>();
+            var newShapeModels = new List<ShapeModel>();
 
             foreach (var shapeModel in Shapes)
             {
                 var adapter = _adapterProvider.GetAdapter(shapeModel.Type);
                 var shapeEntity = adapter.ToEntity(shapeModel);
                 shapeEntity.DrawingBoardId = CurrentBoard.Id;
-                await _shapeRepository.AddAsync(shapeEntity);
+
+                if (shapeModel.IsNew)
+                {
+                    newShapes.Add(shapeEntity);
+                    newShapeModels.Add(shapeModel);
+                }
+                else if (shapeModel.IsModified)
+                {
+                    shapeEntity.Id = shapeModel.Id;
+                    modifiedShapes.Add(shapeEntity);
+                }
+            }
+
+            // Bulk insert new shapes
+            if (newShapes.Count > 0)
+            {
+                await _shapeRepository.BulkInsertAsync(newShapes);
+
+                // Update shape models with generated IDs
+                for (int i = 0; i < newShapes.Count; i++)
+                {
+                    newShapeModels[i].Id = newShapes[i].Id;
+                    newShapeModels[i].IsNew = false;
+                    newShapeModels[i].IsModified = false;
+                }
+            }
+
+            // Bulk update modified shapes
+            if (modifiedShapes.Count > 0)
+            {
+                await _shapeRepository.BulkUpdateAsync(modifiedShapes);
+
+                foreach (var shape in Shapes.Where(s => !s.IsNew && s.IsModified))
+                {
+                    shape.IsModified = false;
+                }
             }
 
             HasUnsavedChanges = false;
 
-            await DialogService.ShowMessageAsync(
-                "Saved",
-                $"Board '{CurrentBoard.Name}' saved with {Shapes.Count} shapes!"
-            );
+            if (showSuccessDialog)
+            {
+                await DialogService.ShowMessageAsync(
+                    "Saved",
+                    $"Board '{CurrentBoard.Name}' saved with {Shapes.Count} shapes!"
+                );
+            }
         });
     }
 
@@ -235,10 +298,15 @@ public partial class DrawingScreenViewModel : BaseViewModel
                 CanvasBackgroundColor = ParseColor(boardWithShapes.BackgroundColor);
 
                 Shapes.Clear();
+                _deletedShapeIds.Clear();
+
                 foreach (var shapeEntity in boardWithShapes.Shapes.OrderBy(s => s.ZIndex))
                 {
                     var adapter = _adapterProvider.GetAdapter(shapeEntity.Type);
                     var shapeModel = adapter.ToModel(shapeEntity);
+                    shapeModel.Id = shapeEntity.Id;
+                    shapeModel.IsNew = false;
+                    shapeModel.IsModified = false;
                     Shapes.Add(shapeModel);
                 }
 
@@ -264,10 +332,15 @@ public partial class DrawingScreenViewModel : BaseViewModel
                 CanvasBackgroundColor = ParseColor(boardWithShapes.BackgroundColor);
 
                 Shapes.Clear();
+                _deletedShapeIds.Clear();
+
                 foreach (var shapeEntity in boardWithShapes.Shapes.OrderBy(s => s.ZIndex))
                 {
                     var adapter = _adapterProvider.GetAdapter(shapeEntity.Type);
                     var shapeModel = adapter.ToModel(shapeEntity);
+                    shapeModel.Id = shapeEntity.Id;
+                    shapeModel.IsNew = false;
+                    shapeModel.IsModified = false;
                     Shapes.Add(shapeModel);
                 }
 
@@ -291,6 +364,8 @@ public partial class DrawingScreenViewModel : BaseViewModel
     public void AddShape(ShapeModel shape)
     {
         shape.ZIndex = Shapes.Count;
+        shape.IsNew = true;
+        shape.IsModified = false;
         Shapes.Add(shape);
         HasUnsavedChanges = true;
     }
@@ -298,6 +373,21 @@ public partial class DrawingScreenViewModel : BaseViewModel
     public void RemoveShape(ShapeModel shape)
     {
         Shapes.Remove(shape);
+
+        if (!shape.IsNew && shape.Id > 0)
+        {
+            _deletedShapeIds.Add(shape.Id);
+        }
+
+        HasUnsavedChanges = true;
+    }
+
+    public void MarkShapeModified(ShapeModel shape)
+    {
+        if (!shape.IsNew)
+        {
+            shape.IsModified = true;
+        }
         HasUnsavedChanges = true;
     }
 

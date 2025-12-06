@@ -43,12 +43,49 @@ public class DrawingBoardRepository : IDrawingBoardRepository
     public async Task UpdateAsync(DrawingBoard entity)
     {
         entity.LastModified = DateTime.UtcNow;
-        _context.DrawingBoards.Update(entity);
+
+        // Check if entity is already tracked
+        var trackedEntity = _context.ChangeTracker.Entries<DrawingBoard>()
+            .FirstOrDefault(e => e.Entity.Id == entity.Id);
+
+        if (trackedEntity != null)
+        {
+            // Update the tracked entity's values
+            trackedEntity.CurrentValues.SetValues(entity);
+            trackedEntity.State = EntityState.Modified;
+        }
+        else
+        {
+            // Check if there's a tracked entity from FindAsync or similar
+            var existingEntity = await _context.DrawingBoards.FindAsync(entity.Id);
+            if (existingEntity != null)
+            {
+                // Update the existing tracked entity
+                _context.Entry(existingEntity).CurrentValues.SetValues(entity);
+            }
+            else
+            {
+                // Attach and mark as modified
+                _context.DrawingBoards.Attach(entity);
+                _context.Entry(entity).State = EntityState.Modified;
+            }
+        }
+
         await _context.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(int id)
     {
+        // Detach any tracked entity with this ID first
+        var trackedEntities = _context.ChangeTracker.Entries<DrawingBoard>()
+            .Where(e => e.Entity.Id == id)
+            .ToList();
+
+        foreach (var entry in trackedEntities)
+        {
+            entry.State = EntityState.Detached;
+        }
+
         var entity = await _context.DrawingBoards.FindAsync(id);
         if (entity != null)
         {
