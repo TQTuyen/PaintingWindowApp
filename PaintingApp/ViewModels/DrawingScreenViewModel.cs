@@ -113,6 +113,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
     public event EventHandler? SelectionChanged;
     public event EventHandler? TemplateCreated;
     public event EventHandler? TemplateInsertionModeChanged;
+    public event EventHandler<TemplateUsageUpdatedEventArgs>? TemplateUsageUpdated;
 
     public DrawingScreenViewModel(
         INavigationService navigationService,
@@ -264,14 +265,20 @@ public partial class DrawingScreenViewModel : BaseViewModel
                 insertedShapes.Add(shapeModel);
             }
 
-            // Increment template usage count
-            await _templateGroupRepository.IncrementUsageCountAsync(templateId);
-
-            // Update the local template view model
-            var templateVm = AvailableTemplates.FirstOrDefault(t => t.Id == templateId);
-            if (templateVm != null)
+            // Only increment usage count if shapes were actually inserted
+            if (insertedShapes.Count > 0)
             {
-                templateVm.UsageCount++;
+                await _templateGroupRepository.IncrementUsageCountAsync(templateId);
+
+                // Update the local template view model for UI sync
+                var templateVm = AvailableTemplates.FirstOrDefault(t => t.Id == templateId);
+                if (templateVm != null)
+                {
+                    templateVm.UsageCount++;
+                }
+
+                // Raise event for cross-screen synchronization
+                TemplateUsageUpdated?.Invoke(this, new TemplateUsageUpdatedEventArgs(templateId));
             }
 
             HasUnsavedChanges = true;
@@ -855,5 +862,15 @@ public partial class DrawingScreenViewModel : BaseViewModel
         }
 
         return Colors.White;
+    }
+}
+
+public class TemplateUsageUpdatedEventArgs : EventArgs
+{
+    public int TemplateId { get; }
+
+    public TemplateUsageUpdatedEventArgs(int templateId)
+    {
+        TemplateId = templateId;
     }
 }

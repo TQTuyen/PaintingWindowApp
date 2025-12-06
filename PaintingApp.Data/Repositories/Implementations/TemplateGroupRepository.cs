@@ -87,12 +87,10 @@ public class TemplateGroupRepository : ITemplateGroupRepository
 
     public async Task IncrementUsageCountAsync(int id)
     {
-        var entity = await _context.TemplateGroups.FindAsync(id);
-        if (entity != null)
-        {
-            entity.UsageCount++;
-            await _context.SaveChangesAsync();
-        }
+        await _context.TemplateGroups
+            .Where(t => t.Id == id)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(t => t.UsageCount, t => t.UsageCount + 1));
     }
 
     public async Task<int> GetShapeCountAsync(int templateGroupId)
