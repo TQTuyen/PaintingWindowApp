@@ -20,13 +20,14 @@
         </Grid.RowDefinitions>
         
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
         <!-- Primary Toolbar: File Actions & Board Info -->
         <Grid Grid.Row="0"
-              Grid.ColumnSpan="2"
+              Grid.ColumnSpan="3"
               Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
               BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
               BorderThickness="0,0,0,1"
@@ -123,7 +124,7 @@
 
         <!-- Secondary Toolbar: Drawing Tools & Style Settings -->
         <Grid Grid.Row="1"
-              Grid.ColumnSpan="2"
+              Grid.ColumnSpan="3"
               Background="{ThemeResource LayerFillColorDefaultBrush}"
               BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
               BorderThickness="0,0,0,1"
@@ -422,9 +423,127 @@
             </StackPanel>
         </Grid>
 
+        <!-- Templates Sidebar (Left) -->
+        <Border Grid.Row="2"
+                Grid.Column="0"
+                Width="200"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <StackPanel Grid.Row="0" Padding="12,12,12,8" Spacing="4">
+                    <TextBlock Text="Templates"
+                               Style="{StaticResource SubtitleTextBlockStyle}"/>
+                    <TextBlock Text="Click to place on canvas"
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+
+                <!-- Template Insertion Mode Indicator -->
+                <Border Grid.Row="1"
+                        Background="{ThemeResource SystemFillColorSuccessBackgroundBrush}"
+                        Padding="12,8"
+                        Visibility="{x:Bind ViewModel.IsTemplateInsertionMode, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Click on canvas to place"
+                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                   VerticalAlignment="Center"/>
+                        <Button Grid.Column="1"
+                                Command="{x:Bind ViewModel.CancelTemplateInsertionCommand}"
+                                Padding="4"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                ToolTipService.ToolTip="Cancel">
+                            <FontIcon Glyph="&#xE711;" FontSize="12"/>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Templates List -->
+                <ListView Grid.Row="2"
+                          x:Name="TemplatesListView"
+                          ItemsSource="{x:Bind ViewModel.AvailableTemplates, Mode=OneWay}"
+                          SelectionMode="None"
+                          CanDragItems="True"
+                          DragItemsStarting="TemplatesListView_DragItemsStarting"
+                          Padding="8">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="viewmodels:TemplateGroupViewModel">
+                            <Grid Padding="8"
+                                  Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                  BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                  BorderThickness="1"
+                                  CornerRadius="4"
+                                  Margin="0,2"
+                                  PointerPressed="TemplateItem_PointerPressed">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="40"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Thumbnail Placeholder -->
+                                <Border Grid.Column="0"
+                                        Width="36"
+                                        Height="36"
+                                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="4">
+                                    <FontIcon Glyph="&#xE7C3;"
+                                              FontSize="16"
+                                              Opacity="0.5"/>
+                                </Border>
+
+                                <!-- Info -->
+                                <StackPanel Grid.Column="1" 
+                                            Margin="8,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Spacing="2">
+                                    <TextBlock Text="{x:Bind Name}"
+                                               Style="{StaticResource BodyTextBlockStyle}"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxLines="1"/>
+                                    <TextBlock Style="{StaticResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                        <Run Text="{x:Bind ShapeCount}"/>
+                                        <Run Text="shapes"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+
+                    <!-- Empty State -->
+                    <ListView.Footer>
+                        <StackPanel Visibility="{x:Bind local:DrawingView.IsCollectionEmpty(ViewModel.AvailableTemplates.Count), Mode=OneWay}"
+                                    Padding="12"
+                                    Spacing="8"
+                                    HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xE7C3;" FontSize="24" Opacity="0.3"/>
+                            <TextBlock Text="No templates"
+                                       Style="{StaticResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </ListView.Footer>
+                </ListView>
+            </Grid>
+        </Border>
+
         <!-- Drawing Canvas Area -->
         <ScrollViewer Grid.Row="2"
-                      Grid.Column="0"
+                      Grid.Column="1"
                       HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Auto"
                       ZoomMode="Enabled"
@@ -444,6 +563,9 @@
                             Width="{x:Bind ViewModel.CanvasWidth, Mode=OneWay}"
                             Height="{x:Bind ViewModel.CanvasHeight, Mode=OneWay}"
                             Background="{x:Bind ViewModel.CanvasBackgroundColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
+                            AllowDrop="True"
+                            DragOver="DrawingCanvas_DragOver"
+                            Drop="DrawingCanvas_Drop"
                             PointerPressed="DrawingCanvas_PointerPressed"
                             PointerMoved="DrawingCanvas_PointerMoved"
                             PointerReleased="DrawingCanvas_PointerReleased"/>
@@ -451,10 +573,10 @@
             </Grid>
         </ScrollViewer>
 
-        <!-- Properties Panel -->
+        <!-- Properties Panel (Right) -->
         <controls:PropertiesPanel x:Name="ShapePropertiesPanel"
                                   Grid.Row="2"
-                                  Grid.Column="1"
+                                  Grid.Column="2"
                                   Width="280"
                                   Visibility="{x:Bind ViewModel.HasSelection, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                                   SelectedShape="{x:Bind ViewModel.SelectedShape, Mode=OneWay}"

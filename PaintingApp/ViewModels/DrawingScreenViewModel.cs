@@ -35,6 +35,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveBoardCommand))]
     [NotifyCanExecuteChangedFor(nameof(DeleteBoardCommand))]
+    [NotifyPropertyChangedFor(nameof(CanInsertTemplate))]
     private DrawingBoard? _currentBoard;
 
     [ObservableProperty]
@@ -42,6 +43,13 @@ public partial class DrawingScreenViewModel : BaseViewModel
 
     [ObservableProperty]
     private ObservableCollection<ShapeModel> _selectedShapes = [];
+
+    [ObservableProperty]
+    private ObservableCollection<TemplateGroupViewModel> _availableTemplates = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTemplateInsertionMode))]
+    private int? _pendingTemplateId;
 
     [ObservableProperty]
     private double _canvasWidth = 800;
@@ -98,10 +106,13 @@ public partial class DrawingScreenViewModel : BaseViewModel
     public bool CanSave => CurrentBoard != null && CurrentProfile != null;
     public bool CanDeleteBoard => CurrentBoard != null && CurrentBoard.Id > 0;
     public bool CanSaveAsTemplate => HasSelection && CurrentProfile != null;
+    public bool CanInsertTemplate => CurrentBoard != null && CurrentProfile != null;
+    public bool IsTemplateInsertionMode => PendingTemplateId.HasValue;
 
     public event EventHandler? ShapesRendered;
     public event EventHandler? SelectionChanged;
     public event EventHandler? TemplateCreated;
+    public event EventHandler? TemplateInsertionModeChanged;
 
     public DrawingScreenViewModel(
         INavigationService navigationService,
@@ -130,10 +141,10 @@ public partial class DrawingScreenViewModel : BaseViewModel
         };
     }
 
-    public override Task InitializeAsync()
+    public override async Task InitializeAsync()
     {
         LoadProfileSettings();
-        return Task.CompletedTask;
+        await LoadAvailableTemplatesAsync();
     }
 
     private void LoadProfileSettings()
@@ -148,6 +159,137 @@ public partial class DrawingScreenViewModel : BaseViewModel
             StrokeColor = ParseColor(CurrentProfile.DefaultStrokeColor);
             SelectedStrokeDashStyle = ParseStrokeDashStyle(CurrentProfile.DefaultStrokeStyle);
         }
+    }
+
+    [RelayCommand]
+    private async Task LoadAvailableTemplatesAsync()
+    {
+        if (CurrentProfile == null)
+            return;
+
+        await ExecuteAsync(async () =>
+        {
+            var templates = await _templateGroupRepository.GetByProfileIdAsync(CurrentProfile.Id);
+            
+            AvailableTemplates.Clear();
+            foreach (var template in templates)
+            {
+                var shapeCount = await _templateGroupRepository.GetShapeCountAsync(template.Id);
+                AvailableTemplates.Add(new TemplateGroupViewModel
+                {
+                    Id = template.Id,
+                    Name = template.Name,
+                    Description = template.Description,
+                    UsageCount = template.UsageCount,
+                    ShapeCount = shapeCount,
+                    CreatedDate = template.CreatedDate
+                });
+            }
+        });
+    }
+
+    [RelayCommand]
+    private void SelectTemplateForInsertion(int templateId)
+    {
+        if (!CanInsertTemplate)
+            return;
+
+        PendingTemplateId = templateId;
+        TemplateInsertionModeChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private void CancelTemplateInsertion()
+    {
+        PendingTemplateId = null;
+        TemplateInsertionModeChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private async Task InsertTemplateAtPositionAsync(Point insertionPoint)
+    {
+        if (!PendingTemplateId.HasValue || CurrentBoard == null)
+            return;
+
+        var templateId = PendingTemplateId.Value;
+        PendingTemplateId = null;
+        TemplateInsertionModeChanged?.Invoke(this, EventArgs.Empty);
+
+        await InsertTemplateAsync(templateId, insertionPoint);
+    }
+
+    public async Task InsertTemplateAsync(int templateId, Point insertionPoint)
+    {
+        if (CurrentBoard == null)
+        {
+            await DialogService.ShowWarningAsync(
+                "No Board Selected",
+                "Please create or open a board before inserting templates."
+            );
+            return;
+        }
+
+        await ExecuteAsync(async () =>
+        {
+            var templateWithShapes = await _templateGroupRepository.GetWithShapesAsync(templateId);
+            
+            if (templateWithShapes == null)
+            {
+                await DialogService.ShowWarningAsync(
+                    "Template Not Found",
+                    "The selected template could not be found."
+                );
+                return;
+            }
+
+            if (templateWithShapes.Shapes.Count == 0)
+                return;
+
+            var insertedShapes = new List<ShapeModel>();
+            var baseZIndex = Shapes.Count;
+
+            foreach (var templateShape in templateWithShapes.Shapes.OrderBy(s => s.ZIndex))
+            {
+                var adapter = _adapterProvider.GetAdapter(templateShape.Type);
+                var shapeModel = adapter.ToModel(templateShape);
+                
+                var transformer = _transformerProvider.GetTransformer(shapeModel.Type);
+                transformer.Translate(shapeModel, insertionPoint.X, insertionPoint.Y);
+                
+                shapeModel.ZIndex = baseZIndex + templateShape.ZIndex;
+                shapeModel.IsNew = true;
+                shapeModel.IsModified = false;
+                
+                Shapes.Add(shapeModel);
+                insertedShapes.Add(shapeModel);
+            }
+
+            // Increment template usage count
+            await _templateGroupRepository.IncrementUsageCountAsync(templateId);
+
+            // Update the local template view model
+            var templateVm = AvailableTemplates.FirstOrDefault(t => t.Id == templateId);
+            if (templateVm != null)
+            {
+                templateVm.UsageCount++;
+            }
+
+            HasUnsavedChanges = true;
+            RenderShapes();
+
+            // Select the inserted shapes
+            ClearSelection();
+            foreach (var shape in insertedShapes)
+            {
+                shape.IsSelected = true;
+                SelectedShapes.Add(shape);
+            }
+            if (insertedShapes.Count > 0)
+            {
+                SelectedShape = insertedShapes[0];
+                HasSelection = true;
+            }
+        });
     }
 
     [RelayCommand]
@@ -234,14 +376,12 @@ public partial class DrawingScreenViewModel : BaseViewModel
                 await _drawingBoardRepository.UpdateAsync(CurrentBoard);
             }
 
-            // Handle deleted shapes
             if (_deletedShapeIds.Count > 0)
             {
                 await _shapeRepository.BulkDeleteAsync(_deletedShapeIds);
                 _deletedShapeIds.Clear();
             }
 
-            // Separate new and modified shapes
             var newShapes = new List<Shape>();
             var modifiedShapes = new List<Shape>();
             var newShapeModels = new List<ShapeModel>();
@@ -264,12 +404,10 @@ public partial class DrawingScreenViewModel : BaseViewModel
                 }
             }
 
-            // Bulk insert new shapes
             if (newShapes.Count > 0)
             {
                 await _shapeRepository.BulkInsertAsync(newShapes);
 
-                // Update shape models with generated IDs
                 for (int i = 0; i < newShapes.Count; i++)
                 {
                     newShapeModels[i].Id = newShapes[i].Id;
@@ -278,7 +416,6 @@ public partial class DrawingScreenViewModel : BaseViewModel
                 }
             }
 
-            // Bulk update modified shapes
             if (modifiedShapes.Count > 0)
             {
                 await _shapeRepository.BulkUpdateAsync(modifiedShapes);
@@ -342,7 +479,6 @@ public partial class DrawingScreenViewModel : BaseViewModel
             );
         });
 
-        // Clear state and navigate back
         ClearBoardState();
         NavigateToManagement();
     }
@@ -356,6 +492,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
         HasUnsavedChanges = false;
         SelectedShape = null;
         ClearSelection();
+        PendingTemplateId = null;
     }
 
     private void NavigateToManagement()
@@ -458,6 +595,11 @@ public partial class DrawingScreenViewModel : BaseViewModel
     private void SelectTool(string toolName)
     {
         SelectedTool = toolName;
+        // Cancel template insertion if switching tools
+        if (PendingTemplateId.HasValue)
+        {
+            CancelTemplateInsertion();
+        }
     }
 
     public void AddShape(ShapeModel shape)
@@ -618,6 +760,17 @@ public partial class DrawingScreenViewModel : BaseViewModel
             }
 
             await _shapeRepository.BulkInsertAsync(templateShapes);
+
+            // Add to available templates
+            AvailableTemplates.Insert(0, new TemplateGroupViewModel
+            {
+                Id = templateGroup.Id,
+                Name = templateGroup.Name,
+                Description = templateGroup.Description,
+                UsageCount = 0,
+                ShapeCount = shapesToSave.Count,
+                CreatedDate = templateGroup.CreatedDate
+            });
 
             TemplateCreated?.Invoke(this, EventArgs.Empty);
 

@@ -11,6 +11,7 @@ using PaintingApp.Contracts;
 using PaintingApp.Models;
 using PaintingApp.Services;
 using PaintingApp.ViewModels;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.UI;
 
@@ -44,6 +45,8 @@ public sealed partial class DrawingView : Page
 
     private bool _isNavigatingAway;
 
+    private const string TemplateIdDataFormat = "TemplateGroupId";
+
     public DrawingView()
     {
         InitializeComponent();
@@ -58,6 +61,12 @@ public sealed partial class DrawingView : Page
         DataContext = ViewModel;
 
         ViewModel.ShapesRendered += OnShapesRendered;
+        ViewModel.TemplateInsertionModeChanged += OnTemplateInsertionModeChanged;
+    }
+
+    public static Visibility IsCollectionEmpty(int count)
+    {
+        return count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     public static DoubleCollection? GetDashArrayPreview(StrokeDashStyle style)
@@ -142,6 +151,10 @@ public sealed partial class DrawingView : Page
             });
         }
         // Cancel (result == 0) - do nothing, stay on page
+    }
+
+    private void OnTemplateInsertionModeChanged(object? sender, EventArgs e)
+    {
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -249,6 +262,13 @@ public sealed partial class DrawingView : Page
         var point = e.GetCurrentPoint(DrawingCanvas).Position;
         var isCtrlPressed = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
             .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+
+        // Handle template insertion mode (click-to-place)
+        if (ViewModel.IsTemplateInsertionMode)
+        {
+            _ = ViewModel.InsertTemplateAtPositionCommand.ExecuteAsync(point);
+            return;
+        }
 
         if (ViewModel.SelectedTool == "Select")
         {
@@ -541,4 +561,64 @@ public sealed partial class DrawingView : Page
 
         return Colors.Black;
     }
+
+    #region Template Drag-and-Drop Handling
+
+    private void TemplatesListView_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
+    {
+        if (e.Items.Count == 0) return;
+
+        if (e.Items[0] is TemplateGroupViewModel template)
+        {
+            e.Data.SetData(TemplateIdDataFormat, template.Id);
+            e.Data.RequestedOperation = DataPackageOperation.Copy;
+        }
+    }
+
+    private void DrawingCanvas_DragOver(object sender, DragEventArgs e)
+    {
+        // Check if the drag data contains a template ID
+        if (e.DataView.Contains(TemplateIdDataFormat))
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+            e.DragUIOverride.Caption = "Insert template";
+            e.DragUIOverride.IsCaptionVisible = true;
+            e.DragUIOverride.IsGlyphVisible = true;
+        }
+        else
+        {
+            e.AcceptedOperation = DataPackageOperation.None;
+        }
+    }
+
+    private async void DrawingCanvas_Drop(object sender, DragEventArgs e)
+    {
+        if (!e.DataView.Contains(TemplateIdDataFormat)) return;
+
+        try
+        {
+            var templateId = (int)await e.DataView.GetDataAsync(TemplateIdDataFormat);
+            var dropPosition = e.GetPosition(DrawingCanvas);
+
+            await ViewModel.InsertTemplateAsync(templateId, dropPosition);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error dropping template: {ex.Message}");
+        }
+    }
+
+    #endregion
+
+    #region Template Click-to-Place Handling
+
+    private void TemplateItem_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        if (sender is FrameworkElement element && element.DataContext is TemplateGroupViewModel template)
+        {
+            ViewModel.SelectTemplateForInsertionCommand.Execute(template.Id);
+        }
+    }
+
+    #endregion
 }
