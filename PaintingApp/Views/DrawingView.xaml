@@ -5,23 +5,223 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="using:PaintingApp.ViewModels"
     mc:Ignorable="d"
     Background="Transparent">
 
-    <Grid Padding="24">
-        <StackPanel HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Spacing="16">
-            <FontIcon Glyph="&#xE929;" 
-                      FontSize="64"
-                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
-            <TextBlock Text="Drawing Screen"
-                       Style="{StaticResource TitleTextBlockStyle}"
-                       HorizontalAlignment="Center"/>
-            <TextBlock Text="Canvas and tools will be implemented in future commits"
-                       Style="{StaticResource BodyTextBlockStyle}"
-                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                       HorizontalAlignment="Center"/>
-        </StackPanel>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar with Acrylic Background -->
+        <Grid Grid.Row="0"
+              Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+              BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+              BorderThickness="0,0,0,1"
+              Padding="12,8">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Shape Tools -->
+            <StackPanel Grid.Column="0"
+                        Orientation="Horizontal"
+                        Spacing="4">
+
+                <TextBlock Text="Tools:"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,0"
+                           Style="{StaticResource CaptionTextBlockStyle}"/>
+
+                <StackPanel Orientation="Horizontal" Spacing="2">
+                    <RadioButton x:Name="SelectTool"
+                                 GroupName="DrawingTools"
+                                 Tag="Select"
+                                 IsChecked="True"
+                                 ToolTipService.ToolTip="Select"
+                                 Click="ToolRadioButton_Click"
+                                 Width="40" Height="40"
+                                 Padding="0"
+                                 MinWidth="0">
+                        <FontIcon Glyph="&#xE7C9;" FontSize="16"/>
+                    </RadioButton>
+
+                    <RadioButton x:Name="LineTool"
+                                 GroupName="DrawingTools"
+                                 Tag="Line"
+                                 ToolTipService.ToolTip="Line"
+                                 Click="ToolRadioButton_Click"
+                                 Width="40" Height="40"
+                                 Padding="0"
+                                 MinWidth="0">
+                        <FontIcon Glyph="&#xE76D;" FontSize="16"/>
+                    </RadioButton>
+
+                    <RadioButton x:Name="RectangleTool"
+                                 GroupName="DrawingTools"
+                                 Tag="Rectangle"
+                                 ToolTipService.ToolTip="Rectangle"
+                                 Click="ToolRadioButton_Click"
+                                 Width="40" Height="40"
+                                 Padding="0"
+                                 MinWidth="0">
+                        <FontIcon Glyph="&#xE739;" FontSize="16"/>
+                    </RadioButton>
+
+                    <RadioButton x:Name="CircleTool"
+                                 GroupName="DrawingTools"
+                                 Tag="Circle"
+                                 ToolTipService.ToolTip="Circle"
+                                 Click="ToolRadioButton_Click"
+                                 Width="40" Height="40"
+                                 Padding="0"
+                                 MinWidth="0">
+                        <FontIcon Glyph="&#xE91B;" FontSize="16"/>
+                    </RadioButton>
+
+                    <RadioButton x:Name="TriangleTool"
+                                 GroupName="DrawingTools"
+                                 Tag="Triangle"
+                                 ToolTipService.ToolTip="Triangle"
+                                 Click="ToolRadioButton_Click"
+                                 Width="40" Height="40"
+                                 Padding="0"
+                                 MinWidth="0">
+                        <FontIcon Glyph="&#xE9D1;" FontSize="16"/>
+                    </RadioButton>
+
+                    <RadioButton x:Name="PolygonTool"
+                                 GroupName="DrawingTools"
+                                 Tag="Polygon"
+                                 ToolTipService.ToolTip="Polygon"
+                                 Click="ToolRadioButton_Click"
+                                 Width="40" Height="40"
+                                 Padding="0"
+                                 MinWidth="0">
+                        <FontIcon Glyph="&#xE9D1;" FontSize="16"/>
+                    </RadioButton>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Spacer -->
+            <Border Grid.Column="1"/>
+
+            <!-- Stroke and Fill Settings -->
+            <StackPanel Grid.Column="2"
+                        Orientation="Horizontal"
+                        Spacing="16">
+
+                <!-- Stroke Thickness -->
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Stroke:"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource CaptionTextBlockStyle}"/>
+                    <NumberBox Value="{x:Bind ViewModel.StrokeThickness, Mode=TwoWay}"
+                               Minimum="0.5"
+                               Maximum="50"
+                               SmallChange="0.5"
+                               SpinButtonPlacementMode="Compact"
+                               Width="80"/>
+                </StackPanel>
+
+                <!-- Stroke Color -->
+                <Button x:Name="StrokeColorButton"
+                        Width="80"
+                        ToolTipService.ToolTip="Stroke Color">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Border Width="20"
+                                Height="20"
+                                Background="{x:Bind ViewModel.StrokeColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                CornerRadius="2"/>
+                        <FontIcon Glyph="&#xE790;" FontSize="12"/>
+                    </StackPanel>
+                    <Button.Flyout>
+                        <Flyout>
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Stroke Color"
+                                           Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                                <ColorPicker Color="{x:Bind ViewModel.StrokeColor, Mode=TwoWay}"
+                                             ColorSpectrumShape="Ring"
+                                             IsAlphaEnabled="True"/>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+
+                <!-- Fill Color -->
+                <Button x:Name="FillColorButton"
+                        Width="80"
+                        ToolTipService.ToolTip="Fill Color">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Border Width="20"
+                                Height="20"
+                                Background="{x:Bind ViewModel.FillColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                BorderThickness="1"
+                                CornerRadius="2"/>
+                        <FontIcon Glyph="&#xE771;" FontSize="12"/>
+                    </StackPanel>
+                    <Button.Flyout>
+                        <Flyout>
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Fill Color"
+                                           Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                                <ColorPicker Color="{x:Bind ViewModel.FillColor, Mode=TwoWay}"
+                                             ColorSpectrumShape="Ring"
+                                             IsAlphaEnabled="True"/>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Drawing Canvas Area -->
+        <ScrollViewer Grid.Row="1"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto"
+                      ZoomMode="Enabled"
+                      MinZoomFactor="0.25"
+                      MaxZoomFactor="4"
+                      Background="{ThemeResource LayerFillColorDefaultBrush}">
+
+            <Grid HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Margin="24">
+
+                <!-- Canvas Container -->
+                <Border Background="White"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="2"
+                        CornerRadius="4">
+                    <Canvas x:Name="DrawingCanvas"
+                            Width="{x:Bind ViewModel.CanvasWidth, Mode=OneWay}"
+                            Height="{x:Bind ViewModel.CanvasHeight, Mode=OneWay}"
+                            Background="White"
+                            PointerPressed="DrawingCanvas_PointerPressed"
+                            PointerMoved="DrawingCanvas_PointerMoved"
+                            PointerReleased="DrawingCanvas_PointerReleased"/>
+                </Border>
+
+                <!-- Canvas Info Overlay -->
+                <TextBlock VerticalAlignment="Bottom"
+                           HorizontalAlignment="Left"
+                           Margin="0,0,0,-24"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Style="{StaticResource CaptionTextBlockStyle}">
+                    <Run Text="{x:Bind ViewModel.CanvasWidth, Mode=OneWay}"/>
+                    <Run Text="×"/>
+                    <Run Text="{x:Bind ViewModel.CanvasHeight, Mode=OneWay}"/>
+                    <Run Text="px"/>
+                </TextBlock>
+            </Grid>
+        </ScrollViewer>
     </Grid>
 </Page>

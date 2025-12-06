@@ -28,6 +28,7 @@ namespace PaintingApp.Extensions
         {
             services.AddTransient<MainScreenViewModel>();
             services.AddTransient<ManagementViewModel>();
+            services.AddTransient<DrawingScreenViewModel>();
 
             return services;
         }

@@ -13,6 +13,7 @@
             </ResourceDictionary.MergedDictionaries>
             
             <helpers:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+            <helpers:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
