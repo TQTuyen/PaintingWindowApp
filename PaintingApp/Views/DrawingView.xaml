@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:PaintingApp.ViewModels"
+    xmlns:controls="using:PaintingApp.Controls"
     mc:Ignorable="d"
     Background="Transparent">
 
@@ -14,9 +15,15 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
 
         <!-- Toolbar with Acrylic Background -->
         <Grid Grid.Row="0"
+              Grid.ColumnSpan="2"
               Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
               BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
               BorderThickness="0,0,0,1"
@@ -473,6 +480,7 @@
 
         <!-- Drawing Canvas Area -->
         <ScrollViewer Grid.Row="1"
+                      Grid.Column="0"
                       HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Auto"
                       ZoomMode="Enabled"
@@ -510,5 +518,15 @@
                 </TextBlock>
             </Grid>
         </ScrollViewer>
+
+        <!-- Properties Panel -->
+        <controls:PropertiesPanel x:Name="ShapePropertiesPanel"
+                                  Grid.Row="1"
+                                  Grid.Column="1"
+                                  Width="280"
+                                  Visibility="{x:Bind ViewModel.HasSelection, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                                  SelectedShape="{x:Bind ViewModel.SelectedShape, Mode=OneWay}"
+                                  ShapeDeleted="PropertiesPanel_ShapeDeleted"
+                                  ShapePropertyChanged="PropertiesPanel_ShapePropertyChanged"/>
     </Grid>
 </Page>

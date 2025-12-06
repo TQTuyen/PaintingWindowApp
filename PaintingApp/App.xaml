@@ -15,6 +15,7 @@
             <helpers:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
             <helpers:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
             <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <helpers:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
             <helpers:IndexToVisibilityConverter x:Key="IndexToVisibilityConverter"/>
             <helpers:DateTimeToLocalStringConverter x:Key="DateTimeToLocalStringConverter"/>
         </ResourceDictionary>

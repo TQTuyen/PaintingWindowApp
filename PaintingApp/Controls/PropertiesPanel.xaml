@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="PaintingApp.Controls.PropertiesPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:PaintingApp.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource LayerFillColorDefaultBrush}"
+          BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+          BorderThickness="1,0,0,0"
+          Padding="16">
+        
+        <ScrollViewer Visibility="{x:Bind HasSelection, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StackPanel Spacing="16">
+                
+                <TextBlock Text="Shape Properties"
+                           Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                <!-- Shape Type -->
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Type"
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="{x:Bind SelectedShape.Type, Mode=OneWay}"
+                               Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                </StackPanel>
+
+                <Border Height="1" 
+                        Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+
+                <!-- Stroke Properties -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Stroke"
+                               Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                    
+                    <!-- Stroke Color -->
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Color"
+                                   Style="{StaticResource CaptionTextBlockStyle}"/>
+                        <Button HorizontalAlignment="Stretch">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <Border Grid.Column="0"
+                                        Width="32" Height="32"
+                                        Background="{x:Bind SelectedShape.StrokeColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Margin="0,0,8,0"/>
+                                
+                                <TextBlock Grid.Column="1"
+                                           Text="Change Color"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                            <Button.Flyout>
+                                <Flyout>
+                                    <ColorPicker x:Name="StrokeColorPicker"
+                                                 ColorSpectrumShape="Ring"
+                                                 IsAlphaEnabled="True"
+                                                 ColorChanged="StrokeColorPicker_ColorChanged"/>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                    </StackPanel>
+                    
+                    <!-- Stroke Thickness -->
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Thickness"
+                                   Style="{StaticResource CaptionTextBlockStyle}"/>
+                        <Slider x:Name="StrokeThicknessSlider"
+                                Minimum="0.5"
+                                Maximum="20"
+                                StepFrequency="0.5"
+                                ValueChanged="StrokeThicknessSlider_ValueChanged"/>
+                        <NumberBox x:Name="StrokeThicknessNumberBox"
+                                   Minimum="0.5"
+                                   Maximum="50"
+                                   SmallChange="0.5"
+                                   SpinButtonPlacementMode="Compact"
+                                   ValueChanged="StrokeThicknessNumberBox_ValueChanged"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <Border Height="1" 
+                        Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+
+                <!-- Fill Properties -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Fill"
+                               Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                    
+                    <Button Content="No Fill (Transparent)"
+                            HorizontalAlignment="Stretch"
+                            Click="NoFill_Click"/>
+                    
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Color"
+                                   Style="{StaticResource CaptionTextBlockStyle}"/>
+                        <Button HorizontalAlignment="Stretch">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <Border Grid.Column="0"
+                                        Width="32" Height="32"
+                                        Background="{x:Bind SelectedShape.FillColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Margin="0,0,8,0"/>
+                                
+                                <TextBlock Grid.Column="1"
+                                           Text="Change Color"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                            <Button.Flyout>
+                                <Flyout>
+                                    <ColorPicker x:Name="FillColorPicker"
+                                                 ColorSpectrumShape="Ring"
+                                                 IsAlphaEnabled="True"
+                                                 ColorChanged="FillColorPicker_ColorChanged"/>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+
+                <Border Height="1" 
+                        Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+
+                <!-- Actions -->
+                <StackPanel Spacing="8">
+                    <Button Content="Delete Shape"
+                            HorizontalAlignment="Stretch"
+                            Click="DeleteShape_Click">
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="Delete"/>
+                        </Button.KeyboardAccelerators>
+                    </Button>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Empty State -->
+        <StackPanel HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="8"
+                    Visibility="{x:Bind HasSelection, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+            <FontIcon Glyph="&#xE7C9;" 
+                      FontSize="48"
+                      Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            <TextBlock Text="No shape selected"
+                       Style="{StaticResource BodyTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Select a shape to view properties"
+                       Style="{StaticResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                       HorizontalAlignment="Center"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

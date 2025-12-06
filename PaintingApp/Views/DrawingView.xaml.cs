@@ -1,9 +1,13 @@
 using System;
+using System.ComponentModel;
+using System.Linq;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using Microsoft.UI.Xaml.Shapes;
 using PaintingApp.Contracts;
 using PaintingApp.Models;
 using PaintingApp.Services;
@@ -24,6 +28,7 @@ public sealed partial class DrawingView : Page
     private Point _startPoint;
     private ShapeModel? _currentShape;
     private IShapeFactory? _currentFactory;
+    private Border? _selectionAdorner;
 
     public DrawingView()
     {
@@ -45,6 +50,45 @@ public sealed partial class DrawingView : Page
         {
             await ViewModel.LoadBoardByIdCommand.ExecuteAsync(boardId);
         }
+
+        ViewModel.PropertyChanged += ViewModel_PropertyChanged;
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        ViewModel.PropertyChanged -= ViewModel_PropertyChanged;
+        
+        if (ViewModel.SelectedShape != null)
+        {
+            ViewModel.SelectedShape.PropertyChanged -= SelectedShape_PropertyChanged;
+        }
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ViewModel.SelectedShape))
+        {
+            if (ViewModel.SelectedShape != null)
+            {
+                ViewModel.SelectedShape.PropertyChanged += SelectedShape_PropertyChanged;
+                ShowSelectionAdorner(ViewModel.SelectedShape);
+            }
+            else
+            {
+                HideSelectionAdorner();
+            }
+        }
+    }
+
+    private void SelectedShape_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (sender is ShapeModel shape)
+        {
+            RenderAllShapes();
+            ShowSelectionAdorner(shape);
+            ViewModel.HasUnsavedChanges = true;
+        }
     }
 
     private void OnShapesRendered(object? sender, EventArgs e)
@@ -60,6 +104,11 @@ public sealed partial class DrawingView : Page
         {
             var renderer = _rendererFactory.GetRenderer(shapeModel.Type);
             renderer.Render(DrawingCanvas, shapeModel);
+        }
+
+        if (ViewModel.SelectedShape != null)
+        {
+            ShowSelectionAdorner(ViewModel.SelectedShape);
         }
     }
 
@@ -83,9 +132,26 @@ public sealed partial class DrawingView : Page
 
     private void DrawingCanvas_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        var point = e.GetCurrentPoint(DrawingCanvas).Position;
+
+        if (ViewModel.SelectedTool == "Select")
+        {
+            var clickedShape = HitTestShape(point);
+
+            if (clickedShape != null)
+            {
+                ViewModel.SelectedShape = clickedShape;
+            }
+            else
+            {
+                ViewModel.SelectedShape = null;
+            }
+
+            return;
+        }
+
         if (!_factoryProvider.HasFactory(ViewModel.SelectedTool)) return;
 
-        var point = e.GetCurrentPoint(DrawingCanvas).Position;
         _startPoint = point;
         _isDrawing = true;
 
@@ -141,6 +207,64 @@ public sealed partial class DrawingView : Page
         DrawingCanvas.ReleasePointerCapture(e.Pointer);
     }
 
+    private ShapeModel? HitTestShape(Point point)
+    {
+        for (int i = ViewModel.Shapes.Count - 1; i >= 0; i--)
+        {
+            var shape = ViewModel.Shapes[i];
+            if (IsPointInShape(point, shape))
+            {
+                return shape;
+            }
+        }
+        return null;
+    }
+
+    private static bool IsPointInShape(Point point, ShapeModel shape)
+    {
+        var bounds = shape.GetBounds();
+        var expandedBounds = new Rect(
+            bounds.X - 5,
+            bounds.Y - 5,
+            bounds.Width + 10,
+            bounds.Height + 10
+        );
+        return expandedBounds.Contains(point);
+    }
+
+    private void ShowSelectionAdorner(ShapeModel shape)
+    {
+        HideSelectionAdorner();
+
+        var bounds = shape.GetBounds();
+        if (bounds.Width <= 0 || bounds.Height <= 0) return;
+
+        _selectionAdorner = new Border
+        {
+            BorderBrush = new SolidColorBrush(Colors.DodgerBlue),
+            BorderThickness = new Thickness(2),
+            Width = bounds.Width + 10,
+            Height = bounds.Height + 10,
+            CornerRadius = new CornerRadius(2),
+            IsHitTestVisible = false
+        };
+
+        Canvas.SetLeft(_selectionAdorner, bounds.X - 5);
+        Canvas.SetTop(_selectionAdorner, bounds.Y - 5);
+        Canvas.SetZIndex(_selectionAdorner, 10000);
+
+        DrawingCanvas.Children.Add(_selectionAdorner);
+    }
+
+    private void HideSelectionAdorner()
+    {
+        if (_selectionAdorner != null)
+        {
+            DrawingCanvas.Children.Remove(_selectionAdorner);
+            _selectionAdorner = null;
+        }
+    }
+
     private void StrokePresetColor_Click(object sender, ItemClickEventArgs e)
     {
         if (e.ClickedItem is Border border && border.Tag is string colorHex)
@@ -160,6 +284,20 @@ public sealed partial class DrawingView : Page
     private void NoFill_Click(object sender, RoutedEventArgs e)
     {
         ViewModel.FillColor = Colors.Transparent;
+    }
+
+    private void PropertiesPanel_ShapeDeleted(object sender, ShapeModel shape)
+    {
+        ViewModel.RemoveShape(shape);
+        ViewModel.SelectedShape = null;
+        HideSelectionAdorner();
+        RenderAllShapes();
+    }
+
+    private void PropertiesPanel_ShapePropertyChanged(object sender, ShapeModel shape)
+    {
+        RenderAllShapes();
+        ViewModel.HasUnsavedChanges = true;
     }
 
     private static Color ParseColor(string hex)

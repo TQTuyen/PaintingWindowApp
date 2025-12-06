@@ -61,9 +61,21 @@ public partial class DrawingScreenViewModel : BaseViewModel
     [ObservableProperty]
     private string _boardName = "Untitled";
 
+    [ObservableProperty]
+    private ShapeModel? _selectedShape;
+
+    [ObservableProperty]
+    private bool _hasSelection;
+
+    partial void OnSelectedShapeChanged(ShapeModel? value)
+    {
+        HasSelection = value != null;
+    }
+
     public bool CanSave => CurrentBoard != null && CurrentProfile != null;
 
     public event EventHandler? ShapesRendered;
+    public event EventHandler? SelectionChanged;
 
     public DrawingScreenViewModel(
         INavigationService navigationService,
@@ -287,6 +299,12 @@ public partial class DrawingScreenViewModel : BaseViewModel
     {
         Shapes.Remove(shape);
         HasUnsavedChanges = true;
+    }
+
+    [RelayCommand]
+    private void DeselectShape()
+    {
+        SelectedShape = null;
     }
 
     private static Color ParseColor(string? hex)
