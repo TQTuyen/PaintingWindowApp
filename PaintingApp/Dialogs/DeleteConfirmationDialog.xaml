@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="PaintingApp.Dialogs.DeleteConfirmationDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Delete Profile"
+    PrimaryButtonText="Delete"
+    SecondaryButtonText="Cancel"
+    DefaultButton="Secondary">
+
+    <StackPanel Spacing="16" Padding="0,8,0,0">
+        <TextBlock TextWrapping="Wrap">
+            <Run Text="Are you sure you want to delete profile "/>
+            <Run Text="{x:Bind ProfileName}" FontWeight="SemiBold"/>
+            <Run Text="?"/>
+        </TextBlock>
+
+        <InfoBar x:Name="CascadeWarning"
+                 IsOpen="True"
+                 Severity="Warning"
+                 IsClosable="False"
+                 Title="Warning"
+                 Visibility="{x:Bind HasRelatedData}">
+            <InfoBar.Content>
+                <StackPanel Spacing="8">
+                    <TextBlock Text="This will also permanently delete:"/>
+                    <StackPanel Spacing="4" Margin="16,0,0,0">
+                        <TextBlock Visibility="{x:Bind HasBoards}">
+                            <Run Text="• "/>
+                            <Run Text="{x:Bind BoardCount}"/>
+                            <Run Text=" drawing board(s)"/>
+                        </TextBlock>
+                        <TextBlock Visibility="{x:Bind HasTemplates}">
+                            <Run Text="• "/>
+                            <Run Text="{x:Bind TemplateCount}"/>
+                            <Run Text=" template(s)"/>
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+            </InfoBar.Content>
+        </InfoBar>
+
+        <TextBlock Text="This action cannot be undone."
+                   FontStyle="Italic"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+    </StackPanel>
+</ContentDialog>

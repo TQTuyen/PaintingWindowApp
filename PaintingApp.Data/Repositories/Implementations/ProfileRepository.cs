@@ -90,4 +90,16 @@ public class ProfileRepository : IProfileRepository
             .OrderBy(p => p.Name)
             .ToListAsync();
     }
+
+    public async Task<int> GetBoardCountAsync(int profileId)
+    {
+        return await _context.DrawingBoards
+            .CountAsync(db => db.ProfileId == profileId);
+    }
+
+    public async Task<int> GetTemplateCountAsync(int profileId)
+    {
+        return await _context.TemplateGroups
+            .CountAsync(tg => tg.ProfileId == profileId);
+    }
 }

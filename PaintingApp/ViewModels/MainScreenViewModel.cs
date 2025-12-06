@@ -138,25 +138,30 @@ public partial class MainScreenViewModel : BaseViewModel
     [RelayCommand]
     private async Task DeleteProfileAsync(Profile? profile)
     {
-        if (profile == null) return;
+        if (profile == null || App.MainWindow?.Content?.XamlRoot == null) return;
 
-        var confirmed = await DialogService.ShowConfirmationAsync(
-            "Delete Profile",
-            $"Are you sure you want to delete the profile '{profile.Name}'?\n\nThis action cannot be undone and will also delete all associated drawing boards and templates.",
-            "Delete",
-            "Cancel");
+        var boardCount = await _profileRepository.GetBoardCountAsync(profile.Id);
+        var templateCount = await _profileRepository.GetTemplateCountAsync(profile.Id);
 
-        if (confirmed)
+        var dialog = new DeleteConfirmationDialog(profile.Name, boardCount, templateCount)
+        {
+            XamlRoot = App.MainWindow.Content.XamlRoot
+        };
+
+        var result = await dialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary)
         {
             await ExecuteAsync(async () =>
             {
                 try
                 {
+                    var isCurrentProfile = _profileStateService.CurrentProfile?.Id == profile.Id;
+
                     await _profileRepository.DeleteAsync(profile.Id);
                     Profiles.Remove(profile);
 
-                    // Clear selected profile if it was deleted
-                    if (SelectedProfile?.Id == profile.Id)
+                    if (isCurrentProfile)
                     {
                         SelectedProfile = null;
                         _profileStateService.ClearProfile();

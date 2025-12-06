@@ -56,6 +56,12 @@ public sealed partial class MainWindow : Window
         DispatcherQueue.TryEnqueue(() =>
         {
             UpdateDrawingMenuState();
+
+            // Navigate away from Drawing if profile is cleared while on that page
+            if (profile == null && ContentFrame.CurrentSourcePageType == typeof(DrawingView))
+            {
+                _navigationService.NavigateTo("Home");
+            }
         });
     }
 

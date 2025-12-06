@@ -15,4 +15,6 @@ public interface IProfileRepository
     Task<bool> IsNameUniqueAsync(string name, int? excludeId = null);
     Task<IEnumerable<Profile>> GetProfilesWithBoardsAsync();
     Task<IEnumerable<Profile>> GetProfilesWithTemplatesAsync();
+    Task<int> GetBoardCountAsync(int profileId);
+    Task<int> GetTemplateCountAsync(int profileId);
 }
