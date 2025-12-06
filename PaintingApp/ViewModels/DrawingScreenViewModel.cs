@@ -10,6 +10,8 @@ using PaintingApp.Contracts;
 using PaintingApp.Data.Entities;
 using PaintingApp.Data.Repositories.Interfaces;
 using PaintingApp.Dialogs;
+using PaintingApp.Models;
+using PaintingApp.Services;
 using Windows.UI;
 
 namespace PaintingApp.ViewModels;
@@ -19,6 +21,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
     private readonly IProfileStateService _profileStateService;
     private readonly IDrawingBoardRepository _drawingBoardRepository;
     private readonly IShapeRepository _shapeRepository;
+    private readonly ShapeAdapterProvider _adapterProvider;
 
     [ObservableProperty]
     private Profile? _currentProfile;
@@ -28,7 +31,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
     private DrawingBoard? _currentBoard;
 
     [ObservableProperty]
-    private ObservableCollection<Shape> _shapes = new();
+    private ObservableCollection<ShapeModel> _shapes = [];
 
     [ObservableProperty]
     private double _canvasWidth = 800;
@@ -67,12 +70,14 @@ public partial class DrawingScreenViewModel : BaseViewModel
         IDialogService dialogService,
         IProfileStateService profileStateService,
         IDrawingBoardRepository drawingBoardRepository,
-        IShapeRepository shapeRepository)
+        IShapeRepository shapeRepository,
+        ShapeAdapterProvider adapterProvider)
         : base(navigationService, dialogService)
     {
         _profileStateService = profileStateService;
         _drawingBoardRepository = drawingBoardRepository;
         _shapeRepository = shapeRepository;
+        _adapterProvider = adapterProvider;
 
         Title = "Drawing";
     }
@@ -143,6 +148,8 @@ public partial class DrawingScreenViewModel : BaseViewModel
                 CanvasBackgroundColor = ParseColor(newBoard.BackgroundColor);
                 Shapes.Clear();
                 HasUnsavedChanges = false;
+                
+                RenderShapes();
             });
         }
     }
@@ -164,19 +171,22 @@ public partial class DrawingScreenViewModel : BaseViewModel
             else
             {
                 await _drawingBoardRepository.UpdateAsync(CurrentBoard);
+                await _shapeRepository.DeleteByDrawingBoardIdAsync(CurrentBoard.Id);
             }
 
-            foreach (var shape in Shapes.Where(s => s.Id == 0))
+            foreach (var shapeModel in Shapes)
             {
-                shape.DrawingBoardId = CurrentBoard.Id;
-                await _shapeRepository.AddAsync(shape);
+                var adapter = _adapterProvider.GetAdapter(shapeModel.Type);
+                var shapeEntity = adapter.ToEntity(shapeModel);
+                shapeEntity.DrawingBoardId = CurrentBoard.Id;
+                await _shapeRepository.AddAsync(shapeEntity);
             }
 
             HasUnsavedChanges = false;
 
             await DialogService.ShowMessageAsync(
                 "Saved",
-                $"Board '{CurrentBoard.Name}' saved successfully!"
+                $"Board '{CurrentBoard.Name}' saved with {Shapes.Count} shapes!"
             );
         });
     }
@@ -213,12 +223,15 @@ public partial class DrawingScreenViewModel : BaseViewModel
                 CanvasBackgroundColor = ParseColor(boardWithShapes.BackgroundColor);
 
                 Shapes.Clear();
-                foreach (var shape in boardWithShapes.Shapes.OrderBy(s => s.ZIndex))
+                foreach (var shapeEntity in boardWithShapes.Shapes.OrderBy(s => s.ZIndex))
                 {
-                    Shapes.Add(shape);
+                    var adapter = _adapterProvider.GetAdapter(shapeEntity.Type);
+                    var shapeModel = adapter.ToModel(shapeEntity);
+                    Shapes.Add(shapeModel);
                 }
 
                 HasUnsavedChanges = false;
+                RenderShapes();
             }
         });
     }
@@ -239,13 +252,14 @@ public partial class DrawingScreenViewModel : BaseViewModel
                 CanvasBackgroundColor = ParseColor(boardWithShapes.BackgroundColor);
 
                 Shapes.Clear();
-                foreach (var shape in boardWithShapes.Shapes.OrderBy(s => s.ZIndex))
+                foreach (var shapeEntity in boardWithShapes.Shapes.OrderBy(s => s.ZIndex))
                 {
-                    Shapes.Add(shape);
+                    var adapter = _adapterProvider.GetAdapter(shapeEntity.Type);
+                    var shapeModel = adapter.ToModel(shapeEntity);
+                    Shapes.Add(shapeModel);
                 }
 
                 HasUnsavedChanges = false;
-
                 RenderShapes();
             }
         });
@@ -262,14 +276,14 @@ public partial class DrawingScreenViewModel : BaseViewModel
         SelectedTool = toolName;
     }
 
-    public void AddShape(Shape shape)
+    public void AddShape(ShapeModel shape)
     {
         shape.ZIndex = Shapes.Count;
         Shapes.Add(shape);
         HasUnsavedChanges = true;
     }
 
-    public void RemoveShape(Shape shape)
+    public void RemoveShape(ShapeModel shape)
     {
         Shapes.Remove(shape);
         HasUnsavedChanges = true;

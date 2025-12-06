@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -23,8 +22,6 @@ public sealed partial class DrawingView : Page
     private Point _startPoint;
     private ShapeModel? _currentShape;
     private IShapeFactory? _currentFactory;
-
-    private readonly List<ShapeModel> _shapeModels = [];
 
     public DrawingView()
     {
@@ -57,7 +54,7 @@ public sealed partial class DrawingView : Page
     {
         DrawingCanvas.Children.Clear();
 
-        foreach (var shapeModel in _shapeModels)
+        foreach (var shapeModel in ViewModel.Shapes)
         {
             var renderer = _rendererFactory.GetRenderer(shapeModel.Type);
             renderer.Render(DrawingCanvas, shapeModel);
@@ -116,9 +113,7 @@ public sealed partial class DrawingView : Page
         var endPoint = e.GetCurrentPoint(DrawingCanvas).Position;
         _currentFactory.UpdateShape(_currentShape, _startPoint, endPoint);
 
-        _currentShape.ZIndex = _shapeModels.Count;
-        _shapeModels.Add(_currentShape);
-        ViewModel.HasUnsavedChanges = true;
+        ViewModel.AddShape(_currentShape);
 
         DrawingCanvas.Children.Clear();
         RenderAllShapes();
