@@ -27,6 +27,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
             <!-- Tool Selector with Dropdown -->
@@ -175,22 +176,32 @@
                         Orientation="Horizontal"
                         Spacing="12">
 
-                <!-- Stroke Thickness -->
+                <!-- Stroke Thickness with Slider + NumberBox -->
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <TextBlock Text="Stroke:"
                                VerticalAlignment="Center"
                                Style="{StaticResource CaptionTextBlockStyle}"/>
+                    
+                    <Slider x:Name="ThicknessSlider"
+                            Value="{x:Bind ViewModel.StrokeThickness, Mode=TwoWay}"
+                            Minimum="0.5"
+                            Maximum="20"
+                            StepFrequency="0.5"
+                            Width="100"
+                            VerticalAlignment="Center"
+                            ToolTipService.ToolTip="Stroke Thickness"/>
+                    
                     <NumberBox Value="{x:Bind ViewModel.StrokeThickness, Mode=TwoWay}"
                                Minimum="0.5"
                                Maximum="50"
                                SmallChange="0.5"
                                SpinButtonPlacementMode="Compact"
-                               Width="80"/>
+                               Width="70"/>
                 </StackPanel>
 
-                <!-- Stroke Color -->
+                <!-- Stroke Color with Presets -->
                 <Button x:Name="StrokeColorButton"
-                        Width="80"
+                        Width="100"
                         ToolTipService.ToolTip="Stroke Color">
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <Border Width="20"
@@ -199,24 +210,117 @@
                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                 BorderThickness="1"
                                 CornerRadius="2"/>
-                        <FontIcon Glyph="&#xE790;" FontSize="12"/>
+                        <TextBlock Text="Stroke"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource CaptionTextBlockStyle}"/>
+                        <FontIcon Glyph="&#xE70D;" FontSize="10"/>
                     </StackPanel>
+                    
                     <Button.Flyout>
                         <Flyout>
-                            <StackPanel Spacing="8">
+                            <StackPanel Spacing="12" Width="300">
                                 <TextBlock Text="Stroke Color"
                                            Style="{StaticResource BodyStrongTextBlockStyle}"/>
-                                <ColorPicker Color="{x:Bind ViewModel.StrokeColor, Mode=TwoWay}"
-                                             ColorSpectrumShape="Ring"
-                                             IsAlphaEnabled="True"/>
+                                
+                                <!-- Color Presets -->
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Quick Colors"
+                                               Style="{StaticResource CaptionTextBlockStyle}"/>
+                                    <GridView SelectionMode="None"
+                                              IsItemClickEnabled="True"
+                                              ItemClick="StrokePresetColor_Click">
+                                        <GridView.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="8"/>
+                                            </ItemsPanelTemplate>
+                                        </GridView.ItemsPanel>
+                                        
+                                        <Border Background="#FF000000" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF000000"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FFFF0000" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FFFF0000"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FFFF7F00" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FFFF7F00"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FFFFFF00" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FFFFFF00"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF00FF00" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF00FF00"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF00FFFF" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF00FFFF"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF0000FF" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF0000FF"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF7F00FF" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF7F00FF"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FFFFFFFF" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FFFFFFFF"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="2"/>
+                                        <Border Background="#FF808080" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF808080"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF8B0000" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF8B0000"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF006400" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF006400"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF00008B" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF00008B"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF8B4513" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF8B4513"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FFFF69B4" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FFFF69B4"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF87CEEB" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF87CEEB"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                    </GridView>
+                                </StackPanel>
+                                
+                                <Border Height="1" 
+                                        Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+                                
+                                <!-- Custom Color Picker -->
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Custom Color"
+                                               Style="{StaticResource CaptionTextBlockStyle}"/>
+                                    <ColorPicker Color="{x:Bind ViewModel.StrokeColor, Mode=TwoWay}"
+                                                 ColorSpectrumShape="Ring"
+                                                 IsAlphaEnabled="True"/>
+                                </StackPanel>
                             </StackPanel>
                         </Flyout>
                     </Button.Flyout>
                 </Button>
 
-                <!-- Fill Color -->
+                <!-- Fill Color with Presets -->
                 <Button x:Name="FillColorButton"
-                        Width="80"
+                        Width="100"
                         ToolTipService.ToolTip="Fill Color">
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <Border Width="20"
@@ -225,21 +329,146 @@
                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                 BorderThickness="1"
                                 CornerRadius="2"/>
-                        <FontIcon Glyph="&#xE771;" FontSize="12"/>
+                        <TextBlock Text="Fill"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource CaptionTextBlockStyle}"/>
+                        <FontIcon Glyph="&#xE70D;" FontSize="10"/>
                     </StackPanel>
+                    
                     <Button.Flyout>
                         <Flyout>
-                            <StackPanel Spacing="8">
+                            <StackPanel Spacing="12" Width="300">
                                 <TextBlock Text="Fill Color"
                                            Style="{StaticResource BodyStrongTextBlockStyle}"/>
-                                <ColorPicker Color="{x:Bind ViewModel.FillColor, Mode=TwoWay}"
-                                             ColorSpectrumShape="Ring"
-                                             IsAlphaEnabled="True"/>
+                                
+                                <!-- No Fill Option -->
+                                <Button Content="No Fill (Transparent)"
+                                        Click="NoFill_Click"
+                                        HorizontalAlignment="Stretch"/>
+                                
+                                <!-- Color Presets -->
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Quick Colors"
+                                               Style="{StaticResource CaptionTextBlockStyle}"/>
+                                    <GridView SelectionMode="None"
+                                              IsItemClickEnabled="True"
+                                              ItemClick="FillPresetColor_Click">
+                                        <GridView.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <ItemsWrapGrid Orientation="Horizontal" MaximumRowsOrColumns="8"/>
+                                            </ItemsPanelTemplate>
+                                        </GridView.ItemsPanel>
+                                        
+                                        <Border Background="#FF000000" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF000000"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FFFF0000" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FFFF0000"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FFFF7F00" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FFFF7F00"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FFFFFF00" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FFFFFF00"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF00FF00" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF00FF00"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF00FFFF" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF00FFFF"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF0000FF" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF0000FF"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF7F00FF" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF7F00FF"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FFFFFFFF" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FFFFFFFF"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="2"/>
+                                        <Border Background="#FF808080" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF808080"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF8B0000" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF8B0000"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF006400" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF006400"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF00008B" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF00008B"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF8B4513" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF8B4513"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FFFF69B4" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FFFF69B4"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                        <Border Background="#FF87CEEB" Width="32" Height="32" 
+                                                CornerRadius="4" Margin="2" Tag="#FF87CEEB"
+                                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"/>
+                                    </GridView>
+                                </StackPanel>
+                                
+                                <Border Height="1" 
+                                        Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+                                
+                                <!-- Custom Color Picker -->
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Custom Color"
+                                               Style="{StaticResource CaptionTextBlockStyle}"/>
+                                    <ColorPicker Color="{x:Bind ViewModel.FillColor, Mode=TwoWay}"
+                                                 ColorSpectrumShape="Ring"
+                                                 IsAlphaEnabled="True"/>
+                                </StackPanel>
                             </StackPanel>
                         </Flyout>
                     </Button.Flyout>
                 </Button>
             </StackPanel>
+            
+            <!-- Settings Preview Panel -->
+            <Border Grid.Column="4"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="8"
+                    Margin="12,0,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Preview:"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource CaptionTextBlockStyle}"/>
+                    
+                    <Canvas Width="60" Height="30">
+                        <Rectangle Width="50" 
+                                   Height="20"
+                                   Canvas.Left="5"
+                                   Canvas.Top="5"
+                                   Stroke="{x:Bind ViewModel.StrokeColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
+                                   StrokeThickness="{x:Bind ViewModel.StrokeThickness, Mode=OneWay}"
+                                   Fill="{x:Bind ViewModel.FillColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
+                                   RadiusX="2"
+                                   RadiusY="2"/>
+                    </Canvas>
+                </StackPanel>
+            </Border>
         </Grid>
 
         <!-- Drawing Canvas Area -->

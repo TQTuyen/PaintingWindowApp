@@ -1,4 +1,5 @@
 using System;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -8,6 +9,7 @@ using PaintingApp.Models;
 using PaintingApp.Services;
 using PaintingApp.ViewModels;
 using Windows.Foundation;
+using Windows.UI;
 
 namespace PaintingApp.Views;
 
@@ -105,6 +107,10 @@ public sealed partial class DrawingView : Page
         var currentPoint = e.GetCurrentPoint(DrawingCanvas).Position;
         _currentFactory.UpdateShape(_currentShape, _startPoint, currentPoint);
 
+        _currentShape.StrokeColor = ViewModel.StrokeColor;
+        _currentShape.StrokeThickness = ViewModel.StrokeThickness;
+        _currentShape.FillColor = ViewModel.FillColor;
+
         DrawingCanvas.Children.Clear();
         RenderAllShapes();
 
@@ -133,5 +139,43 @@ public sealed partial class DrawingView : Page
         _currentFactory = null;
 
         DrawingCanvas.ReleasePointerCapture(e.Pointer);
+    }
+
+    private void StrokePresetColor_Click(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is Border border && border.Tag is string colorHex)
+        {
+            ViewModel.StrokeColor = ParseColor(colorHex);
+        }
+    }
+
+    private void FillPresetColor_Click(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is Border border && border.Tag is string colorHex)
+        {
+            ViewModel.FillColor = ParseColor(colorHex);
+        }
+    }
+
+    private void NoFill_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.FillColor = Colors.Transparent;
+    }
+
+    private static Color ParseColor(string hex)
+    {
+        hex = hex.TrimStart('#');
+
+        if (hex.Length == 8)
+        {
+            return Color.FromArgb(
+                Convert.ToByte(hex.Substring(0, 2), 16),
+                Convert.ToByte(hex.Substring(2, 2), 16),
+                Convert.ToByte(hex.Substring(4, 2), 16),
+                Convert.ToByte(hex.Substring(6, 2), 16)
+            );
+        }
+
+        return Colors.Black;
     }
 }
