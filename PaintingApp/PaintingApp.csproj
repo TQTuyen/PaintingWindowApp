@@ -15,6 +15,7 @@
   <ItemGroup>
     <None Remove="Assets\Logo.png" />
     <None Remove="Dialogs\DeleteConfirmationDialog.xaml" />
+    <None Remove="Dialogs\NewBoardDialog.xaml" />
     <None Remove="Dialogs\ProfileDialog.xaml" />
     <None Remove="Views\DrawingView.xaml" />
     <None Remove="Views\MainScreenView.xaml" />
@@ -63,6 +64,11 @@
     <Content Update="Assets\Logo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Dialogs\NewBoardDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Dialogs\DeleteConfirmationDialog.xaml">

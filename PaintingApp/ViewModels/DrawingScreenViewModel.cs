@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI;
+using Microsoft.UI.Xaml.Controls;
 using PaintingApp.Contracts;
 using PaintingApp.Data.Entities;
 using PaintingApp.Data.Repositories.Interfaces;
+using PaintingApp.Dialogs;
 using Windows.UI;
 
 namespace PaintingApp.ViewModels;
@@ -33,6 +35,9 @@ public partial class DrawingScreenViewModel : BaseViewModel
 
     [ObservableProperty]
     private double _canvasHeight = 600;
+
+    [ObservableProperty]
+    private Color _canvasBackgroundColor = Colors.White;
 
     [ObservableProperty]
     private string _selectedTool = "Select";
@@ -73,7 +78,6 @@ public partial class DrawingScreenViewModel : BaseViewModel
     public override Task InitializeAsync()
     {
         LoadProfileSettings();
-        CreateInitialBoard();
         return Task.CompletedTask;
     }
 
@@ -90,27 +94,18 @@ public partial class DrawingScreenViewModel : BaseViewModel
         }
     }
 
-    private void CreateInitialBoard()
-    {
-        if (CurrentProfile == null) return;
-
-        CurrentBoard = new DrawingBoard
-        {
-            Name = $"Board {DateTime.Now:yyyy-MM-dd HH:mm}",
-            ProfileId = CurrentProfile.Id,
-            Width = (int)CanvasWidth,
-            Height = (int)CanvasHeight,
-            CreatedDate = DateTime.UtcNow,
-            LastModified = DateTime.UtcNow
-        };
-
-        BoardName = CurrentBoard.Name;
-        HasUnsavedChanges = false;
-    }
-
     [RelayCommand]
     private async Task NewBoardAsync()
     {
+        if (CurrentProfile == null)
+        {
+            await DialogService.ShowErrorAsync(
+                "No Profile Selected",
+                "Please select a profile first."
+            );
+            return;
+        }
+
         if (HasUnsavedChanges)
         {
             var saveConfirm = await DialogService.ShowConfirmationAsync(
@@ -124,21 +119,30 @@ public partial class DrawingScreenViewModel : BaseViewModel
             }
         }
 
-        if (CurrentProfile == null) return;
+        if (App.MainWindow?.Content?.XamlRoot == null) return;
 
-        CurrentBoard = new DrawingBoard
+        var dialog = new NewBoardDialog(CurrentProfile)
         {
-            Name = $"Board {DateTime.Now:yyyy-MM-dd HH:mm}",
-            ProfileId = CurrentProfile.Id,
-            Width = (int)CanvasWidth,
-            Height = (int)CanvasHeight,
-            CreatedDate = DateTime.UtcNow,
-            LastModified = DateTime.UtcNow
+            XamlRoot = App.MainWindow.Content.XamlRoot
         };
 
-        Shapes.Clear();
-        HasUnsavedChanges = false;
-        BoardName = CurrentBoard.Name;
+        var result = await dialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary && dialog.Result != null)
+        {
+            await ExecuteAsync(async () =>
+            {
+                var newBoard = await _drawingBoardRepository.AddAsync(dialog.Result);
+
+                CurrentBoard = newBoard;
+                BoardName = newBoard.Name;
+                CanvasWidth = newBoard.Width;
+                CanvasHeight = newBoard.Height;
+                CanvasBackgroundColor = ParseColor(newBoard.BackgroundColor);
+                Shapes.Clear();
+                HasUnsavedChanges = false;
+            });
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanSave))]
@@ -204,6 +208,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
                 BoardName = boardWithShapes.Name;
                 CanvasWidth = boardWithShapes.Width;
                 CanvasHeight = boardWithShapes.Height;
+                CanvasBackgroundColor = ParseColor(boardWithShapes.BackgroundColor);
 
                 Shapes.Clear();
                 foreach (var shape in boardWithShapes.Shapes.OrderBy(s => s.ZIndex))
@@ -238,7 +243,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
     private static Color ParseColor(string? hex)
     {
         if (string.IsNullOrEmpty(hex))
-            return Colors.Black;
+            return Colors.White;
 
         hex = hex.TrimStart('#');
 
@@ -255,6 +260,6 @@ public partial class DrawingScreenViewModel : BaseViewModel
             );
         }
 
-        return Colors.Black;
+        return Colors.White;
     }
 }

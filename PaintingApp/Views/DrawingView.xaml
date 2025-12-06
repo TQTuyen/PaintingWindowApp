@@ -230,14 +230,13 @@
                   Margin="24">
 
                 <!-- Canvas Container -->
-                <Border Background="White"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="2"
                         CornerRadius="4">
                     <Canvas x:Name="DrawingCanvas"
                             Width="{x:Bind ViewModel.CanvasWidth, Mode=OneWay}"
                             Height="{x:Bind ViewModel.CanvasHeight, Mode=OneWay}"
-                            Background="White"
+                            Background="{x:Bind ViewModel.CanvasBackgroundColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
                             PointerPressed="DrawingCanvas_PointerPressed"
                             PointerMoved="DrawingCanvas_PointerMoved"
                             PointerReleased="DrawingCanvas_PointerReleased"/>
