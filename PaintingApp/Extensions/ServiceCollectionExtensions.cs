@@ -61,6 +61,7 @@ namespace PaintingApp.Extensions
             services.AddScoped<IProfileRepository, ProfileRepository>();
             services.AddScoped<IDrawingBoardRepository, DrawingBoardRepository>();
             services.AddScoped<IShapeRepository, ShapeRepository>();
+            services.AddScoped<ITemplateGroupRepository, TemplateGroupRepository>();
 
             return services;
         }

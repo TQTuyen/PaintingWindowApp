@@ -6,140 +6,148 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:PaintingApp.Views"
     xmlns:entities="using:PaintingApp.Data.Entities"
+    xmlns:viewmodels="using:PaintingApp.ViewModels"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="Transparent">
 
-    <Grid Padding="24,16,24,24">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="280"/>
+        </Grid.ColumnDefinitions>
 
-        <!-- Breadcrumb Navigation -->
-        <BreadcrumbBar Grid.Row="0"
-                       ItemsSource="{x:Bind ViewModel.BreadcrumbItems, Mode=OneWay}"
-                       Margin="0,0,0,16"/>
+        <!-- Main Content -->
+        <Grid Grid.Column="0" Padding="24,16,24,24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <!-- Tab Navigation -->
-        <TabView Grid.Row="1"
-                 Grid.RowSpan="2"
-                 TabWidthMode="Equal"
-                 IsAddTabButtonVisible="False"
-                 CanDragTabs="False"
-                 CanReorderTabs="False"
-                 SelectedIndex="{x:Bind ViewModel.SelectedTabIndex, Mode=TwoWay}">
+            <!-- Breadcrumb Navigation -->
+            <BreadcrumbBar Grid.Row="0"
+                           ItemsSource="{x:Bind ViewModel.BreadcrumbItems, Mode=OneWay}"
+                           Margin="0,0,0,16"/>
 
-            <TabViewItem Header="Boards" IsClosable="False">
-                <TabViewItem.IconSource>
-                    <FontIconSource Glyph="&#xE8D8;"/>
-                </TabViewItem.IconSource>
-                <TabViewItem.Content>
-                    <ScrollViewer Padding="16">
-                        <StackPanel Spacing="16">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <Button Command="{x:Bind ViewModel.LoadBoardsCommand}">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon Glyph="&#xE72C;" FontSize="16"/>
-                                        <TextBlock Text="Refresh"/>
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
+            <!-- Tab Navigation -->
+            <TabView Grid.Row="1"
+                     Grid.RowSpan="2"
+                     TabWidthMode="Equal"
+                     IsAddTabButtonVisible="False"
+                     CanDragTabs="False"
+                     CanReorderTabs="False"
+                     SelectedIndex="{x:Bind ViewModel.SelectedTabIndex, Mode=TwoWay}">
 
-                            <!-- Empty State -->
-                            <StackPanel Visibility="{x:Bind ViewModel.HasBoards, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}"
-                                        VerticalAlignment="Center"
-                                        HorizontalAlignment="Center"
-                                        Spacing="16"
-                                        Margin="0,60,0,0">
-                                <FontIcon Glyph="&#xE8D8;" FontSize="64" Opacity="0.4"/>
-                                <TextBlock Text="No boards yet"
-                                           Style="{StaticResource SubtitleTextBlockStyle}"
-                                           HorizontalAlignment="Center"
-                                           Opacity="0.7"/>
-                                <TextBlock Text="Create a new board from the Drawing screen to get started"
-                                           Style="{StaticResource CaptionTextBlockStyle}"
-                                           HorizontalAlignment="Center"
-                                           Opacity="0.5"/>
-                            </StackPanel>
+                <TabViewItem Header="Boards" IsClosable="False">
+                    <TabViewItem.IconSource>
+                        <FontIconSource Glyph="&#xE8D8;"/>
+                    </TabViewItem.IconSource>
+                    <TabViewItem.Content>
+                        <ScrollViewer Padding="16">
+                            <StackPanel Spacing="16">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Button Command="{x:Bind ViewModel.LoadBoardsCommand}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <FontIcon Glyph="&#xE72C;" FontSize="16"/>
+                                            <TextBlock Text="Refresh"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
 
-                            <GridView ItemsSource="{x:Bind ViewModel.Boards, Mode=OneWay}"
-                                      SelectionMode="None"
-                                      IsItemClickEnabled="True"
-                                      Visibility="{x:Bind ViewModel.HasBoards, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <!-- Empty State -->
+                                <StackPanel Visibility="{x:Bind ViewModel.HasBoards, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}"
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Center"
+                                            Spacing="16"
+                                            Margin="0,60,0,0">
+                                    <FontIcon Glyph="&#xE8D8;" FontSize="64" Opacity="0.4"/>
+                                    <TextBlock Text="No boards yet"
+                                               Style="{StaticResource SubtitleTextBlockStyle}"
+                                               HorizontalAlignment="Center"
+                                               Opacity="0.7"/>
+                                    <TextBlock Text="Create a new board from the Drawing screen to get started"
+                                               Style="{StaticResource CaptionTextBlockStyle}"
+                                               HorizontalAlignment="Center"
+                                               Opacity="0.5"/>
+                                </StackPanel>
 
-                                <GridView.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <ItemsWrapGrid Orientation="Horizontal"/>
-                                    </ItemsPanelTemplate>
-                                </GridView.ItemsPanel>
+                                <GridView ItemsSource="{x:Bind ViewModel.Boards, Mode=OneWay}"
+                                          SelectionMode="None"
+                                          IsItemClickEnabled="True"
+                                          Visibility="{x:Bind ViewModel.HasBoards, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
 
-                                <GridView.ItemTemplate>
-                                    <DataTemplate x:DataType="entities:DrawingBoard">
-                                        <Grid Width="280"
-                                              Height="200"
-                                              Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                              BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                                              BorderThickness="1"
-                                              CornerRadius="8"
-                                              Padding="16">
-                                            <Grid.ContextFlyout>
-                                                <MenuFlyout>
-                                                    <MenuFlyoutItem Text="Open"
-                                                                    Command="{Binding ElementName=PageRoot, Path=ViewModel.OpenBoardCommand}"
-                                                                    CommandParameter="{x:Bind}">
-                                                        <MenuFlyoutItem.Icon>
-                                                            <FontIcon Glyph="&#xE8A7;"/>
-                                                        </MenuFlyoutItem.Icon>
-                                                    </MenuFlyoutItem>
-                                                    <MenuFlyoutSeparator/>
-                                                    <MenuFlyoutItem Text="Delete"
-                                                                    Command="{Binding ElementName=PageRoot, Path=ViewModel.DeleteBoardCommand}"
-                                                                    CommandParameter="{x:Bind}">
-                                                        <MenuFlyoutItem.Icon>
-                                                            <FontIcon Glyph="&#xE74D;" Foreground="{ThemeResource SystemFillColorCriticalBrush}"/>
-                                                        </MenuFlyoutItem.Icon>
-                                                    </MenuFlyoutItem>
-                                                </MenuFlyout>
-                                            </Grid.ContextFlyout>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="*"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </Grid.RowDefinitions>
+                                    <GridView.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <ItemsWrapGrid Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </GridView.ItemsPanel>
 
-                                            <!-- Header with Name and Delete Button -->
-                                            <Grid Grid.Row="0">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                
-                                                <TextBlock Grid.Column="0"
+                                    <GridView.ItemTemplate>
+                                        <DataTemplate x:DataType="entities:DrawingBoard">
+                                            <Grid Width="280"
+                                                  Height="200"
+                                                  Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                                  BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                  BorderThickness="1"
+                                                  CornerRadius="8"
+                                                  Padding="16">
+                                                <Grid.ContextFlyout>
+                                                    <MenuFlyout>
+                                                        <MenuFlyoutItem Text="Open"
+                                                                        Command="{Binding ElementName=PageRoot, Path=ViewModel.OpenBoardCommand}"
+                                                                        CommandParameter="{x:Bind}">
+                                                            <MenuFlyoutItem.Icon>
+                                                                <FontIcon Glyph="&#xE8A7;"/>
+                                                            </MenuFlyoutItem.Icon>
+                                                        </MenuFlyoutItem>
+                                                        <MenuFlyoutSeparator/>
+                                                        <MenuFlyoutItem Text="Delete"
+                                                                        Command="{Binding ElementName=PageRoot, Path=ViewModel.DeleteBoardCommand}"
+                                                                        CommandParameter="{x:Bind}">
+                                                            <MenuFlyoutItem.Icon>
+                                                                <FontIcon Glyph="&#xE74D;" Foreground="{ThemeResource SystemFillColorCriticalBrush}"/>
+                                                            </MenuFlyoutItem.Icon>
+                                                        </MenuFlyoutItem>
+                                                    </MenuFlyout>
+                                                </Grid.ContextFlyout>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <!-- Header with Name and Delete Button -->
+                                                <Grid Grid.Row="0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <TextBlock Grid.Column="0"
                                                            Text="{x:Bind Name}"
                                                            Style="{StaticResource SubtitleTextBlockStyle}"
                                                            TextTrimming="CharacterEllipsis"
                                                            MaxLines="1"
                                                            VerticalAlignment="Center"/>
-                                                
-                                                <Button Grid.Column="1"
+
+                                                    <Button Grid.Column="1"
                                                         Command="{Binding ElementName=PageRoot, Path=ViewModel.DeleteBoardCommand}"
                                                         CommandParameter="{x:Bind}"
                                                         Background="Transparent"
                                                         BorderThickness="0"
                                                         Padding="6"
                                                         ToolTipService.ToolTip="Delete Board">
-                                                    <Button.Resources>
-                                                        <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{ThemeResource SystemFillColorCritical}"/>
-                                                    </Button.Resources>
-                                                    <FontIcon Glyph="&#xE74D;" FontSize="14"/>
-                                                </Button>
-                                            </Grid>
+                                                        <Button.Resources>
+                                                            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{ThemeResource SystemFillColorCritical}"/>
+                                                        </Button.Resources>
+                                                        <FontIcon Glyph="&#xE74D;" FontSize="14"/>
+                                                    </Button>
+                                                </Grid>
 
-                                            <!-- Clickable Preview Area -->
-                                            <Button Grid.Row="1"
+                                                <!-- Clickable Preview Area -->
+                                                <Button Grid.Row="1"
                                                     Command="{Binding ElementName=PageRoot, Path=ViewModel.OpenBoardCommand}"
                                                     CommandParameter="{x:Bind}"
                                                     Padding="0"
@@ -148,75 +156,276 @@
                                                     HorizontalAlignment="Stretch"
                                                     VerticalAlignment="Stretch"
                                                     Margin="0,12,0,12">
-                                                <Border Background="White"
+                                                    <Border Background="White"
                                                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                                         BorderThickness="1"
                                                         CornerRadius="4"
                                                         HorizontalAlignment="Stretch"
                                                         VerticalAlignment="Stretch">
-                                                    <TextBlock Text="Preview"
+                                                        <TextBlock Text="Preview"
                                                                HorizontalAlignment="Center"
                                                                VerticalAlignment="Center"
                                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                                </Border>
-                                            </Button>
+                                                    </Border>
+                                                </Button>
 
-                                            <TextBlock Grid.Row="2"
+                                                <TextBlock Grid.Row="2"
                                                        Style="{StaticResource CaptionTextBlockStyle}"
                                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}">
                                                 <Run Text="Modified:"/>
                                                 <Run Text="{x:Bind LastModified, Converter={StaticResource DateTimeToLocalStringConverter}}"/>
-                                            </TextBlock>
-                                        </Grid>
-                                    </DataTemplate>
-                                </GridView.ItemTemplate>
-                            </GridView>
-                        </StackPanel>
-                    </ScrollViewer>
-                </TabViewItem.Content>
-            </TabViewItem>
+                                                </TextBlock>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </GridView.ItemTemplate>
+                                </GridView>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabViewItem.Content>
+                </TabViewItem>
 
-            <TabViewItem Header="Templates" IsClosable="False">
-                <TabViewItem.IconSource>
-                    <FontIconSource Glyph="&#xE7C3;"/>
-                </TabViewItem.IconSource>
-                <TabViewItem.Content>
-                    <Grid Padding="16">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <FontIcon Glyph="&#xE7C3;" FontSize="48" Opacity="0.5"/>
-                            <TextBlock Text="Shape Templates"
+                <TabViewItem Header="Templates" IsClosable="False">
+                    <TabViewItem.IconSource>
+                        <FontIconSource Glyph="&#xE7C3;"/>
+                    </TabViewItem.IconSource>
+                    <TabViewItem.Content>
+                        <ScrollViewer Padding="16">
+                            <StackPanel Spacing="16">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Button Command="{x:Bind ViewModel.LoadTemplatesCommand}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <FontIcon Glyph="&#xE72C;" FontSize="16"/>
+                                            <TextBlock Text="Refresh"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+
+                                <!-- Empty State -->
+                                <StackPanel Visibility="{x:Bind ViewModel.HasTemplates, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"
+                                        Spacing="16"
+                                        Margin="0,60,0,0">
+                                    <FontIcon Glyph="&#xE7C3;" FontSize="64" Opacity="0.4"/>
+                                    <TextBlock Text="No templates yet"
+                                           Style="{StaticResource SubtitleTextBlockStyle}"
+                                           HorizontalAlignment="Center"
+                                           Opacity="0.7"/>
+                                    <TextBlock Text="Select shapes on the Drawing screen and save them as a template"
+                                           Style="{StaticResource CaptionTextBlockStyle}"
+                                           HorizontalAlignment="Center"
+                                           Opacity="0.5"
+                                           TextWrapping="Wrap"
+                                           MaxWidth="300"/>
+                                </StackPanel>
+
+                                <GridView ItemsSource="{x:Bind ViewModel.Templates, Mode=OneWay}"
+                                      SelectionMode="None"
+                                      IsItemClickEnabled="True"
+                                      Visibility="{x:Bind ViewModel.HasTemplates, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+
+                                    <GridView.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <ItemsWrapGrid Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </GridView.ItemsPanel>
+
+                                    <GridView.ItemTemplate>
+                                        <DataTemplate x:DataType="viewmodels:TemplateGroupViewModel">
+                                            <Grid Width="200"
+                                              Height="180"
+                                              Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                              BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                              BorderThickness="1"
+                                              CornerRadius="8"
+                                              Padding="12">
+                                                <Grid.ContextFlyout>
+                                                    <MenuFlyout>
+                                                        <MenuFlyoutItem Text="Delete"
+                                                                    Command="{Binding ElementName=PageRoot, Path=ViewModel.DeleteTemplateCommand}"
+                                                                    CommandParameter="{x:Bind}">
+                                                            <MenuFlyoutItem.Icon>
+                                                                <FontIcon Glyph="&#xE74D;" Foreground="{ThemeResource SystemFillColorCriticalBrush}"/>
+                                                            </MenuFlyoutItem.Icon>
+                                                        </MenuFlyoutItem>
+                                                    </MenuFlyout>
+                                                </Grid.ContextFlyout>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <!-- Header with Name and Delete Button -->
+                                                <Grid Grid.Row="0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <TextBlock Grid.Column="0"
+                                                           Text="{x:Bind Name}"
+                                                           Style="{StaticResource BodyStrongTextBlockStyle}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           MaxLines="1"
+                                                           VerticalAlignment="Center"/>
+
+                                                    <Button Grid.Column="1"
+                                                        Command="{Binding ElementName=PageRoot, Path=ViewModel.DeleteTemplateCommand}"
+                                                        CommandParameter="{x:Bind}"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Padding="4"
+                                                        ToolTipService.ToolTip="Delete Template">
+                                                        <Button.Resources>
+                                                            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{ThemeResource SystemFillColorCritical}"/>
+                                                        </Button.Resources>
+                                                        <FontIcon Glyph="&#xE74D;" FontSize="12"/>
+                                                    </Button>
+                                                </Grid>
+
+                                                <!-- Thumbnail/Placeholder -->
+                                                <Border Grid.Row="1"
+                                                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="4"
+                                                    Margin="0,8,0,8">
+                                                    <Grid>
+                                                        <!-- Placeholder Icon -->
+                                                        <FontIcon Glyph="&#xE7C3;"
+                                                              FontSize="32"
+                                                              Opacity="0.3"
+                                                              HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"/>
+                                                        <!-- Future: Thumbnail Image -->
+                                                        <!--<Image Source="{x:Bind Thumbnail, Mode=OneWay}"
+                                                           Stretch="Uniform"
+                                                           Visibility="{x:Bind HasThumbnail, Mode=OneWay}"/>-->
+                                                    </Grid>
+                                                </Border>
+
+                                                <!-- Info -->
+                                                <StackPanel Grid.Row="2" Spacing="2">
+                                                    <TextBlock Style="{StaticResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                                    <Run Text="{x:Bind ShapeCount}"/>
+                                                    <Run Text="shapes"/>
+                                                    <Run Text="•"/>
+                                                    <Run Text="Used"/>
+                                                    <Run Text="{x:Bind UsageCount}"/>
+                                                    <Run Text="times"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </GridView.ItemTemplate>
+                                </GridView>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabViewItem.Content>
+                </TabViewItem>
+
+                <TabViewItem Header="Dashboard" IsClosable="False">
+                    <TabViewItem.IconSource>
+                        <FontIconSource Glyph="&#xE9D2;"/>
+                    </TabViewItem.IconSource>
+                    <TabViewItem.Content>
+                        <Grid Padding="16">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <FontIcon Glyph="&#xE9D2;" FontSize="48" Opacity="0.5"/>
+                                <TextBlock Text="Dashboard"
                                        Style="{StaticResource SubtitleTextBlockStyle}"
                                        HorizontalAlignment="Center"
                                        Margin="0,16,0,8"/>
-                            <TextBlock Text="Manage your reusable shape templates here"
+                                <TextBlock Text="View statistics and analytics here"
                                        Style="{StaticResource CaptionTextBlockStyle}"
                                        Opacity="0.7"
                                        HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Grid>
-                </TabViewItem.Content>
-            </TabViewItem>
+                            </StackPanel>
+                        </Grid>
+                    </TabViewItem.Content>
+                </TabViewItem>
+            </TabView>
+        </Grid>
 
-            <TabViewItem Header="Dashboard" IsClosable="False">
-                <TabViewItem.IconSource>
-                    <FontIconSource Glyph="&#xE9D2;"/>
-                </TabViewItem.IconSource>
-                <TabViewItem.Content>
-                    <Grid Padding="16">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <FontIcon Glyph="&#xE9D2;" FontSize="48" Opacity="0.5"/>
-                            <TextBlock Text="Dashboard"
-                                       Style="{StaticResource SubtitleTextBlockStyle}"
-                                       HorizontalAlignment="Center"
-                                       Margin="0,16,0,8"/>
-                            <TextBlock Text="View statistics and analytics here"
-                                       Style="{StaticResource CaptionTextBlockStyle}"
-                                       Opacity="0.7"
-                                       HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Grid>
-                </TabViewItem.Content>
-            </TabViewItem>
-        </TabView>
+        <!-- Templates Sidebar -->
+        <Border Grid.Column="1"
+            Background="{ThemeResource LayerFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1,0,0,0">
+            <Grid Padding="16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
+                    <TextBlock Text="Quick Templates"
+                           Style="{StaticResource SubtitleTextBlockStyle}"/>
+                    <TextBlock Text="Recently used templates"
+                           Style="{StaticResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+
+                <!-- Templates List -->
+                <Grid Grid.Row="1">
+                    <!-- Empty State -->
+                    <StackPanel Visibility="{x:Bind ViewModel.HasTemplates, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Spacing="12">
+                        <FontIcon Glyph="&#xE7C3;" FontSize="32" Opacity="0.3"/>
+                        <TextBlock Text="No templates yet"
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               HorizontalAlignment="Center"
+                               Opacity="0.5"/>
+                    </StackPanel>
+
+                    <!-- Templates ListView -->
+                    <ListView ItemsSource="{x:Bind ViewModel.Templates, Mode=OneWay}"
+                          SelectionMode="None"
+                          Visibility="{x:Bind ViewModel.HasTemplates, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="viewmodels:TemplateGroupViewModel">
+                                <Grid Padding="8,12" ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Thumbnail Placeholder -->
+                                    <Border Grid.Column="0"
+                                        Width="40"
+                                        Height="40"
+                                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="4">
+                                        <FontIcon Glyph="&#xE7C3;"
+                                              FontSize="16"
+                                              Opacity="0.5"/>
+                                    </Border>
+
+                                    <!-- Info -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock Text="{x:Bind Name}"
+                                               Style="{StaticResource BodyTextBlockStyle}"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxLines="1"/>
+                                        <TextBlock Style="{StaticResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                        <Run Text="{x:Bind ShapeCount}"/>
+                                        <Run Text="shapes"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Grid>
+        </Border>
     </Grid>
 </Page>

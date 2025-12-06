@@ -18,6 +18,7 @@
     <None Remove="Dialogs\DeleteConfirmationDialog.xaml" />
     <None Remove="Dialogs\NewBoardDialog.xaml" />
     <None Remove="Dialogs\ProfileDialog.xaml" />
+    <None Remove="Dialogs\SaveTemplateDialog.xaml" />
     <None Remove="Views\DrawingView.xaml" />
     <None Remove="Views\MainScreenView.xaml" />
     <None Remove="Views\ManagementView.xaml" />
@@ -65,6 +66,11 @@
     <Content Update="Assets\Logo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Dialogs\SaveTemplateDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Dialogs\NewBoardDialog.xaml">

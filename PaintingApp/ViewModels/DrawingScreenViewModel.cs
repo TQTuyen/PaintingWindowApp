@@ -13,6 +13,7 @@ using PaintingApp.Data.Repositories.Interfaces;
 using PaintingApp.Dialogs;
 using PaintingApp.Models;
 using PaintingApp.Services;
+using Windows.Foundation;
 using Windows.UI;
 
 namespace PaintingApp.ViewModels;
@@ -22,7 +23,9 @@ public partial class DrawingScreenViewModel : BaseViewModel
     private readonly IProfileStateService _profileStateService;
     private readonly IDrawingBoardRepository _drawingBoardRepository;
     private readonly IShapeRepository _shapeRepository;
+    private readonly ITemplateGroupRepository _templateGroupRepository;
     private readonly ShapeAdapterProvider _adapterProvider;
+    private readonly ShapeTransformerProvider _transformerProvider;
 
     private readonly List<int> _deletedShapeIds = [];
 
@@ -36,6 +39,9 @@ public partial class DrawingScreenViewModel : BaseViewModel
 
     [ObservableProperty]
     private ObservableCollection<ShapeModel> _shapes = [];
+
+    [ObservableProperty]
+    private ObservableCollection<ShapeModel> _selectedShapes = [];
 
     [ObservableProperty]
     private double _canvasWidth = 800;
@@ -72,6 +78,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
     private ShapeModel? _selectedShape;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveAsTemplateCommand))]
     private bool _hasSelection;
 
     public ObservableCollection<StrokeDashStyle> AvailableDashStyles { get; } =
@@ -85,14 +92,16 @@ public partial class DrawingScreenViewModel : BaseViewModel
 
     partial void OnSelectedShapeChanged(ShapeModel? value)
     {
-        HasSelection = value != null;
+        HasSelection = value != null || SelectedShapes.Count > 0;
     }
 
     public bool CanSave => CurrentBoard != null && CurrentProfile != null;
     public bool CanDeleteBoard => CurrentBoard != null && CurrentBoard.Id > 0;
+    public bool CanSaveAsTemplate => HasSelection && CurrentProfile != null;
 
     public event EventHandler? ShapesRendered;
     public event EventHandler? SelectionChanged;
+    public event EventHandler? TemplateCreated;
 
     public DrawingScreenViewModel(
         INavigationService navigationService,
@@ -100,15 +109,25 @@ public partial class DrawingScreenViewModel : BaseViewModel
         IProfileStateService profileStateService,
         IDrawingBoardRepository drawingBoardRepository,
         IShapeRepository shapeRepository,
-        ShapeAdapterProvider adapterProvider)
+        ITemplateGroupRepository templateGroupRepository,
+        ShapeAdapterProvider adapterProvider,
+        ShapeTransformerProvider transformerProvider)
         : base(navigationService, dialogService)
     {
         _profileStateService = profileStateService;
         _drawingBoardRepository = drawingBoardRepository;
         _shapeRepository = shapeRepository;
+        _templateGroupRepository = templateGroupRepository;
         _adapterProvider = adapterProvider;
+        _transformerProvider = transformerProvider;
 
         Title = "Drawing";
+        
+        SelectedShapes.CollectionChanged += (s, e) =>
+        {
+            HasSelection = SelectedShapes.Count > 0 || SelectedShape != null;
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
+        };
     }
 
     public override Task InitializeAsync()
@@ -179,6 +198,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
                 Shapes.Clear();
                 _deletedShapeIds.Clear();
                 HasUnsavedChanges = false;
+                ClearSelection();
                 
                 RenderShapes();
             });
@@ -335,6 +355,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
         _deletedShapeIds.Clear();
         HasUnsavedChanges = false;
         SelectedShape = null;
+        ClearSelection();
     }
 
     private void NavigateToManagement()
@@ -375,6 +396,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
 
                 Shapes.Clear();
                 _deletedShapeIds.Clear();
+                ClearSelection();
 
                 foreach (var shapeEntity in boardWithShapes.Shapes.OrderBy(s => s.ZIndex))
                 {
@@ -409,6 +431,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
 
                 Shapes.Clear();
                 _deletedShapeIds.Clear();
+                ClearSelection();
 
                 foreach (var shapeEntity in boardWithShapes.Shapes.OrderBy(s => s.ZIndex))
                 {
@@ -449,6 +472,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
     public void RemoveShape(ShapeModel shape)
     {
         Shapes.Remove(shape);
+        SelectedShapes.Remove(shape);
 
         if (!shape.IsNew && shape.Id > 0)
         {
@@ -471,6 +495,180 @@ public partial class DrawingScreenViewModel : BaseViewModel
     private void DeselectShape()
     {
         SelectedShape = null;
+        ClearSelection();
+    }
+
+    public void ClearSelection()
+    {
+        foreach (var shape in SelectedShapes)
+        {
+            shape.IsSelected = false;
+        }
+        SelectedShapes.Clear();
+        SelectedShape = null;
+        HasSelection = false;
+    }
+
+    public void SelectShape(ShapeModel shape, bool addToSelection = false)
+    {
+        if (!addToSelection)
+        {
+            ClearSelection();
+        }
+
+        if (!SelectedShapes.Contains(shape))
+        {
+            shape.IsSelected = true;
+            SelectedShapes.Add(shape);
+        }
+
+        SelectedShape = shape;
+        HasSelection = true;
+    }
+
+    public void ToggleShapeSelection(ShapeModel shape)
+    {
+        if (SelectedShapes.Contains(shape))
+        {
+            shape.IsSelected = false;
+            SelectedShapes.Remove(shape);
+            
+            if (SelectedShape == shape)
+            {
+                SelectedShape = SelectedShapes.LastOrDefault();
+            }
+        }
+        else
+        {
+            shape.IsSelected = true;
+            SelectedShapes.Add(shape);
+            SelectedShape = shape;
+        }
+
+        HasSelection = SelectedShapes.Count > 0;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSaveAsTemplate))]
+    private async Task SaveAsTemplateAsync()
+    {
+        if (CurrentProfile == null)
+        {
+            await DialogService.ShowErrorAsync(
+                "No Profile Selected",
+                "Please select a profile first."
+            );
+            return;
+        }
+
+        var shapesToSave = SelectedShapes.Count > 0 
+            ? SelectedShapes.ToList() 
+            : (SelectedShape != null ? [SelectedShape] : []);
+
+        if (shapesToSave.Count == 0)
+        {
+            await DialogService.ShowWarningAsync(
+                "No Shapes Selected",
+                "Please select at least one shape to save as a template."
+            );
+            return;
+        }
+
+        if (App.MainWindow?.Content?.XamlRoot == null) return;
+
+        var dialog = new SaveTemplateDialog(shapesToSave.Count)
+        {
+            XamlRoot = App.MainWindow.Content.XamlRoot
+        };
+
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary) return;
+
+        await ExecuteAsync(async () =>
+        {
+            var boundingBox = ComputeBoundingBox(shapesToSave);
+
+            var templateGroup = new TemplateGroup
+            {
+                Name = dialog.TemplateName,
+                Description = dialog.TemplateDescription,
+                ProfileId = CurrentProfile.Id,
+                UsageCount = 0,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            templateGroup = await _templateGroupRepository.AddAsync(templateGroup);
+
+            var templateShapes = new List<Shape>();
+
+            for (int i = 0; i < shapesToSave.Count; i++)
+            {
+                var shapeModel = shapesToSave[i];
+                var adapter = _adapterProvider.GetAdapter(shapeModel.Type);
+                
+                var clonedModel = CloneAndNormalizeShape(shapeModel, boundingBox);
+                var shapeEntity = adapter.ToEntity(clonedModel);
+                
+                shapeEntity.TemplateGroupId = templateGroup.Id;
+                shapeEntity.DrawingBoardId = null;
+                shapeEntity.ZIndex = i;
+                shapeEntity.CreatedDate = DateTime.UtcNow;
+
+                templateShapes.Add(shapeEntity);
+            }
+
+            await _shapeRepository.BulkInsertAsync(templateShapes);
+
+            TemplateCreated?.Invoke(this, EventArgs.Empty);
+
+            await DialogService.ShowMessageAsync(
+                "Template Saved",
+                $"Template '{templateGroup.Name}' created with {shapesToSave.Count} shape{(shapesToSave.Count == 1 ? "" : "s")}."
+            );
+        });
+    }
+
+    private static Rect ComputeBoundingBox(IList<ShapeModel> shapes)
+    {
+        if (shapes.Count == 0)
+            return Rect.Empty;
+
+        double minX = double.MaxValue, minY = double.MaxValue;
+        double maxX = double.MinValue, maxY = double.MinValue;
+
+        foreach (var shape in shapes)
+        {
+            var bounds = shape.GetBounds();
+            
+            if (bounds.Left < minX) minX = bounds.Left;
+            if (bounds.Top < minY) minY = bounds.Top;
+            if (bounds.Right > maxX) maxX = bounds.Right;
+            if (bounds.Bottom > maxY) maxY = bounds.Bottom;
+        }
+
+        return new Rect(minX, minY, maxX - minX, maxY - minY);
+    }
+
+    private ShapeModel CloneAndNormalizeShape(ShapeModel original, Rect boundingBox)
+    {
+        var transformer = _transformerProvider.GetTransformer(original.Type);
+        var adapter = _adapterProvider.GetAdapter(original.Type);
+        
+        // Create entity and convert back to get a clean clone
+        var entity = adapter.ToEntity(original);
+        var cloned = adapter.ToModel(entity);
+        
+        // Normalize position by translating relative to bounding box origin
+        var refPoint = transformer.GetReferencePoint(cloned);
+        var offsetX = -boundingBox.Left;
+        var offsetY = -boundingBox.Top;
+        
+        transformer.Translate(cloned, offsetX, offsetY);
+        
+        cloned.IsNew = true;
+        cloned.IsModified = false;
+        
+        return cloned;
     }
 
     private static StrokeDashStyle ParseStrokeDashStyle(string? strokeStyle)

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="PaintingApp.Dialogs.SaveTemplateDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Save as Template"
+    PrimaryButtonText="Save"
+    SecondaryButtonText="Cancel"
+    DefaultButton="Primary"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick">
+
+    <StackPanel Spacing="16" Padding="0,8,0,0" MinWidth="350">
+
+        <!-- Template Name -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Template Name"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"/>
+            <TextBox x:Name="NameTextBox"
+                     PlaceholderText="Enter template name"
+                     MaxLength="100"
+                     TextChanged="NameTextBox_TextChanged"/>
+            <TextBlock x:Name="NameErrorText"
+                       Text="Template name is required"
+                       Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                       Style="{StaticResource CaptionTextBlockStyle}"
+                       Visibility="Collapsed"/>
+        </StackPanel>
+
+        <!-- Description -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Description (optional)"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"/>
+            <TextBox x:Name="DescriptionTextBox"
+                     PlaceholderText="Enter a description for this template"
+                     MaxLength="300"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"
+                     Height="80"/>
+        </StackPanel>
+
+        <!-- Shape Count Info -->
+        <InfoBar x:Name="ShapeCountInfoBar"
+                 IsOpen="True"
+                 IsClosable="False"
+                 Severity="Informational"
+                 Title="Shapes to save"/>
+
+    </StackPanel>
+</ContentDialog>

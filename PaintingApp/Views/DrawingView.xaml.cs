@@ -185,9 +185,44 @@ public sealed partial class DrawingView : Page
             renderer.Render(DrawingCanvas, shapeModel);
         }
 
-        if (ViewModel.SelectedShape != null)
+        // Show selection adorners for all selected shapes
+        foreach (var selectedShape in ViewModel.SelectedShapes)
+        {
+            ShowSelectionAdornerForShape(selectedShape, isPrimary: selectedShape == ViewModel.SelectedShape);
+        }
+
+        // If only single selection via SelectedShape (backward compatibility)
+        if (ViewModel.SelectedShape != null && !ViewModel.SelectedShapes.Contains(ViewModel.SelectedShape))
         {
             ShowSelectionAdorner(ViewModel.SelectedShape);
+        }
+    }
+
+    private void ShowSelectionAdornerForShape(ShapeModel shape, bool isPrimary)
+    {
+        var bounds = shape.GetBounds();
+        if (bounds.Width <= 0 || bounds.Height <= 0) return;
+
+        var adorner = new Border
+        {
+            BorderBrush = new SolidColorBrush(isPrimary ? Colors.DodgerBlue : Colors.CornflowerBlue),
+            BorderThickness = new Thickness(isPrimary ? 2 : 1.5),
+            Width = bounds.Width + 10,
+            Height = bounds.Height + 10,
+            CornerRadius = new CornerRadius(2),
+            IsHitTestVisible = false
+        };
+
+        Canvas.SetLeft(adorner, bounds.X - 5);
+        Canvas.SetTop(adorner, bounds.Y - 5);
+        Canvas.SetZIndex(adorner, 10000);
+
+        DrawingCanvas.Children.Add(adorner);
+
+        // Show resize handles only for primary selection
+        if (isPrimary)
+        {
+            _handleManager.ShowHandles(DrawingCanvas, bounds);
         }
     }
 
@@ -212,6 +247,8 @@ public sealed partial class DrawingView : Page
     private void DrawingCanvas_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
         var point = e.GetCurrentPoint(DrawingCanvas).Position;
+        var isCtrlPressed = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
 
         if (ViewModel.SelectedTool == "Select")
         {
@@ -230,8 +267,15 @@ public sealed partial class DrawingView : Page
 
             if (clickedShape != null)
             {
-                if (ViewModel.SelectedShape == clickedShape)
+                if (isCtrlPressed)
                 {
+                    // Ctrl+Click: Toggle selection
+                    ViewModel.ToggleShapeSelection(clickedShape);
+                    RenderAllShapes();
+                }
+                else if (ViewModel.SelectedShapes.Contains(clickedShape))
+                {
+                    // Clicked on already selected shape - start dragging
                     _isDraggingShape = true;
                     _draggedShape = clickedShape;
 
@@ -247,12 +291,19 @@ public sealed partial class DrawingView : Page
                 }
                 else
                 {
-                    ViewModel.SelectedShape = clickedShape;
+                    // Click on unselected shape - select it (clearing previous selection)
+                    ViewModel.SelectShape(clickedShape, addToSelection: false);
+                    RenderAllShapes();
                 }
             }
             else
             {
-                ViewModel.SelectedShape = null;
+                // Clicked on empty space - clear selection
+                if (!isCtrlPressed)
+                {
+                    ViewModel.ClearSelection();
+                    RenderAllShapes();
+                }
             }
 
             return;
