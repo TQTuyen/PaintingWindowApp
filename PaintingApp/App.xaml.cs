@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml;
 using PaintingApp.Contracts;
 using PaintingApp.Data;
 using PaintingApp.Extensions;
+using PaintingApp.Helpers;
 using PaintingApp.ViewModels;
 using Windows.Storage;
 
@@ -37,8 +38,7 @@ public partial class App : Application
     {
         DatabasePathProvider.Configure(() =>
         {
-            var localFolder = ApplicationData.Current.LocalFolder.Path;
-            var dbPath = Path.Combine(localFolder, "app.db");
+            var dbPath = AppPaths.GetDatabasePath();
             Debug.WriteLine($"App: Database path configured: {dbPath}");
             return dbPath;
         });
