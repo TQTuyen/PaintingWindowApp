@@ -50,6 +50,8 @@ namespace PaintingApp.Extensions
                 options.UseSqlite($"Data Source={dbPath}"));
 
             services.AddScoped<IProfileRepository, ProfileRepository>();
+            services.AddScoped<IDrawingBoardRepository, DrawingBoardRepository>();
+            services.AddScoped<IShapeRepository, ShapeRepository>();
 
             return services;
         }

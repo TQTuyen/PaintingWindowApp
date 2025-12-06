@@ -24,12 +24,42 @@
 
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Shape Tools -->
+            <!-- Board Commands -->
             <StackPanel Grid.Column="0"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                <Button Command="{x:Bind ViewModel.NewBoardCommand}"
+                        ToolTipService.ToolTip="New Board (Ctrl+N)">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <FontIcon Glyph="&#xE710;" FontSize="16"/>
+                        <TextBlock Text="New"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{x:Bind ViewModel.SaveBoardCommand}"
+                        Style="{StaticResource AccentButtonStyle}"
+                        ToolTipService.ToolTip="Save Board (Ctrl+S)">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <FontIcon Glyph="&#xE74E;" FontSize="16"/>
+                        <TextBlock Text="Save"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <Border Grid.Column="1" 
+                    Width="1" 
+                    Height="24" 
+                    Background="{ThemeResource DividerStrokeColorDefaultBrush}" 
+                    Margin="12,0"/>
+
+            <!-- Shape Tools -->
+            <StackPanel Grid.Column="2"
                         Orientation="Horizontal"
                         Spacing="4">
 
@@ -43,7 +73,7 @@
                                  GroupName="DrawingTools"
                                  Tag="Select"
                                  IsChecked="True"
-                                 ToolTipService.ToolTip="Select"
+                                 ToolTipService.ToolTip="Select (V)"
                                  Click="ToolRadioButton_Click"
                                  Width="40" Height="40"
                                  Padding="0"
@@ -54,7 +84,7 @@
                     <RadioButton x:Name="LineTool"
                                  GroupName="DrawingTools"
                                  Tag="Line"
-                                 ToolTipService.ToolTip="Line"
+                                 ToolTipService.ToolTip="Line (L)"
                                  Click="ToolRadioButton_Click"
                                  Width="40" Height="40"
                                  Padding="0"
@@ -65,7 +95,7 @@
                     <RadioButton x:Name="RectangleTool"
                                  GroupName="DrawingTools"
                                  Tag="Rectangle"
-                                 ToolTipService.ToolTip="Rectangle"
+                                 ToolTipService.ToolTip="Rectangle (R)"
                                  Click="ToolRadioButton_Click"
                                  Width="40" Height="40"
                                  Padding="0"
@@ -76,43 +106,46 @@
                     <RadioButton x:Name="CircleTool"
                                  GroupName="DrawingTools"
                                  Tag="Circle"
-                                 ToolTipService.ToolTip="Circle"
+                                 ToolTipService.ToolTip="Circle (C)"
                                  Click="ToolRadioButton_Click"
                                  Width="40" Height="40"
                                  Padding="0"
                                  MinWidth="0">
-                        <FontIcon Glyph="&#xE91B;" FontSize="16"/>
+                        <FontIcon Glyph="&#xEA3A;" FontSize="16"/>
                     </RadioButton>
 
                     <RadioButton x:Name="TriangleTool"
                                  GroupName="DrawingTools"
                                  Tag="Triangle"
-                                 ToolTipService.ToolTip="Triangle"
+                                 ToolTipService.ToolTip="Triangle (T)"
                                  Click="ToolRadioButton_Click"
                                  Width="40" Height="40"
                                  Padding="0"
                                  MinWidth="0">
-                        <FontIcon Glyph="&#xE9D1;" FontSize="16"/>
-                    </RadioButton>
-
-                    <RadioButton x:Name="PolygonTool"
-                                 GroupName="DrawingTools"
-                                 Tag="Polygon"
-                                 ToolTipService.ToolTip="Polygon"
-                                 Click="ToolRadioButton_Click"
-                                 Width="40" Height="40"
-                                 Padding="0"
-                                 MinWidth="0">
-                        <FontIcon Glyph="&#xE9D1;" FontSize="16"/>
+                        <FontIcon Glyph="&#xE879;" FontSize="16"/>
                     </RadioButton>
                 </StackPanel>
             </StackPanel>
 
-            <!-- Spacer -->
-            <Border Grid.Column="1"/>
+            <!-- Board Name and Unsaved Indicator -->
+            <StackPanel Grid.Column="3"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        Margin="16,0,0,0">
+                <TextBlock Text="{x:Bind ViewModel.BoardName, Mode=OneWay}"
+                           Style="{StaticResource BodyStrongTextBlockStyle}"
+                           VerticalAlignment="Center"/>
+                <FontIcon Glyph="&#xE7BA;"
+                          FontSize="12"
+                          Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                          VerticalAlignment="Center"
+                          Margin="8,0,0,0"
+                          Visibility="{x:Bind ViewModel.HasUnsavedChanges, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                          ToolTipService.ToolTip="Unsaved changes"/>
+            </StackPanel>
 
             <!-- Stroke and Fill Settings -->
-            <StackPanel Grid.Column="2"
+            <StackPanel Grid.Column="4"
                         Orientation="Horizontal"
                         Spacing="16">
 
