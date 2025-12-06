@@ -19,6 +19,7 @@ namespace PaintingApp.Extensions
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<IThemeService, ThemeService>();
             services.AddSingleton<IProfileStateService, ProfileStateService>();
+            services.AddSingleton<ShapeRendererFactory>();
             services.AddSingleton<ViewModelLocator>();
 
             return services;
