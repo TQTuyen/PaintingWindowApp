@@ -14,10 +14,11 @@ public sealed partial class ManagementView : Page
         InitializeComponent();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
         ViewModel.OnNavigatedTo(e.Parameter);
+        await ViewModel.InitializeAsync();
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)

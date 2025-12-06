@@ -60,6 +60,8 @@ public partial class DrawingScreenViewModel : BaseViewModel
 
     public bool CanSave => CurrentBoard != null && CurrentProfile != null;
 
+    public event EventHandler? ShapesRendered;
+
     public DrawingScreenViewModel(
         INavigationService navigationService,
         IDialogService dialogService,
@@ -219,6 +221,39 @@ public partial class DrawingScreenViewModel : BaseViewModel
                 HasUnsavedChanges = false;
             }
         });
+    }
+
+    [RelayCommand]
+    private async Task LoadBoardByIdAsync(int boardId)
+    {
+        await ExecuteAsync(async () =>
+        {
+            var boardWithShapes = await _drawingBoardRepository.GetWithShapesAsync(boardId);
+
+            if (boardWithShapes != null)
+            {
+                CurrentBoard = boardWithShapes;
+                BoardName = boardWithShapes.Name;
+                CanvasWidth = boardWithShapes.Width;
+                CanvasHeight = boardWithShapes.Height;
+                CanvasBackgroundColor = ParseColor(boardWithShapes.BackgroundColor);
+
+                Shapes.Clear();
+                foreach (var shape in boardWithShapes.Shapes.OrderBy(s => s.ZIndex))
+                {
+                    Shapes.Add(shape);
+                }
+
+                HasUnsavedChanges = false;
+
+                RenderShapes();
+            }
+        });
+    }
+
+    private void RenderShapes()
+    {
+        ShapesRendered?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]

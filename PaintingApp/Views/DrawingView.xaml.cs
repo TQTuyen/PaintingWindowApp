@@ -21,6 +21,11 @@ public sealed partial class DrawingView : Page
     {
         base.OnNavigatedTo(e);
         await ViewModel.InitializeAsync();
+
+        if (e.Parameter is int boardId && boardId > 0)
+        {
+            await ViewModel.LoadBoardByIdCommand.ExecuteAsync(boardId);
+        }
     }
 
     private void ToolRadioButton_Click(object sender, RoutedEventArgs e)
@@ -33,16 +38,13 @@ public sealed partial class DrawingView : Page
 
     private void DrawingCanvas_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        // TODO
     }
 
     private void DrawingCanvas_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
-        // TODO
     }
 
     private void DrawingCanvas_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
-        // TODO
     }
 }
