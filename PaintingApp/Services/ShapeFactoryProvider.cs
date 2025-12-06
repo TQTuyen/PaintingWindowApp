@@ -17,7 +17,8 @@ public class ShapeFactoryProvider
             { "Rectangle", new RectangleFactory() },
             { "Circle", new CircleFactory() },
             { "Oval", new OvalFactory() },
-            { "Triangle", new TriangleFactory() }
+            { "Triangle", new TriangleFactory() },
+            { "Polygon", new PolygonFactory() }
         };
     }
 

@@ -25,15 +25,114 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Board Commands -->
+            <!-- Tool Selector with Dropdown -->
             <StackPanel Grid.Column="0"
                         Orientation="Horizontal"
                         Spacing="8">
+
+                <TextBlock Text="Tool:"
+                           VerticalAlignment="Center"
+                           Style="{StaticResource CaptionTextBlockStyle}"/>
+
+                <DropDownButton x:Name="ToolDropDown"
+                                MinWidth="140">
+                    <DropDownButton.Content>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon x:Name="CurrentToolIcon"
+                                      Glyph="&#xE7C9;"
+                                      FontSize="16"/>
+                            <TextBlock x:Name="CurrentToolText"
+                                       Text="{x:Bind ViewModel.SelectedTool, Mode=OneWay}"/>
+                        </StackPanel>
+                    </DropDownButton.Content>
+
+                    <DropDownButton.Flyout>
+                        <MenuFlyout Placement="Bottom">
+                            <MenuFlyoutItem Text="Select"
+                                            Command="{x:Bind ViewModel.SelectToolCommand}"
+                                            CommandParameter="Select"
+                                            Click="ToolMenuItem_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE7C9;"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+
+                            <MenuFlyoutSeparator/>
+
+                            <MenuFlyoutItem Text="Line"
+                                            Command="{x:Bind ViewModel.SelectToolCommand}"
+                                            CommandParameter="Line"
+                                            Click="ToolMenuItem_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE76D;"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+
+                            <MenuFlyoutItem Text="Rectangle"
+                                            Command="{x:Bind ViewModel.SelectToolCommand}"
+                                            CommandParameter="Rectangle"
+                                            Click="ToolMenuItem_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE739;"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+
+                            <MenuFlyoutItem Text="Circle"
+                                            Command="{x:Bind ViewModel.SelectToolCommand}"
+                                            CommandParameter="Circle"
+                                            Click="ToolMenuItem_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xEA3A;"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+
+                            <MenuFlyoutItem Text="Oval"
+                                            Command="{x:Bind ViewModel.SelectToolCommand}"
+                                            CommandParameter="Oval"
+                                            Click="ToolMenuItem_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xF138;"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+
+                            <MenuFlyoutSeparator/>
+
+                            <MenuFlyoutItem Text="Triangle"
+                                            Command="{x:Bind ViewModel.SelectToolCommand}"
+                                            CommandParameter="Triangle"
+                                            Click="ToolMenuItem_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE879;"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+
+                            <MenuFlyoutItem Text="Polygon"
+                                            Command="{x:Bind ViewModel.SelectToolCommand}"
+                                            CommandParameter="Polygon"
+                                            Click="ToolMenuItem_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xF408;"/>
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+            </StackPanel>
+
+            <!-- Board Actions -->
+            <StackPanel Grid.Column="1"
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        Margin="16,0,0,0">
+
+                <Border Width="1"
+                        Height="24"
+                        Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+
                 <Button Command="{x:Bind ViewModel.NewBoardCommand}"
                         ToolTipService.ToolTip="New Board (Ctrl+N)">
                     <StackPanel Orientation="Horizontal" Spacing="4">
@@ -50,104 +149,31 @@
                         <TextBlock Text="Save"/>
                     </StackPanel>
                 </Button>
+
+                <Border Width="1"
+                        Height="24"
+                        Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
             </StackPanel>
 
-            <Border Grid.Column="1" 
-                    Width="1" 
-                    Height="24" 
-                    Background="{ThemeResource DividerStrokeColorDefaultBrush}" 
-                    Margin="12,0"/>
-
-            <!-- Shape Tools -->
+            <!-- Board Name Display -->
             <StackPanel Grid.Column="2"
                         Orientation="Horizontal"
-                        Spacing="4">
-
-                <TextBlock Text="Tools:"
-                           VerticalAlignment="Center"
-                           Margin="0,0,8,0"
-                           Style="{StaticResource CaptionTextBlockStyle}"/>
-
-                <StackPanel Orientation="Horizontal" Spacing="2">
-                    <RadioButton x:Name="SelectTool"
-                                 GroupName="DrawingTools"
-                                 Tag="Select"
-                                 IsChecked="True"
-                                 ToolTipService.ToolTip="Select (V)"
-                                 Click="ToolRadioButton_Click"
-                                 Width="40" Height="40"
-                                 Padding="0"
-                                 MinWidth="0">
-                        <FontIcon Glyph="&#xE7C9;" FontSize="16"/>
-                    </RadioButton>
-
-                    <RadioButton x:Name="LineTool"
-                                 GroupName="DrawingTools"
-                                 Tag="Line"
-                                 ToolTipService.ToolTip="Line (L)"
-                                 Click="ToolRadioButton_Click"
-                                 Width="40" Height="40"
-                                 Padding="0"
-                                 MinWidth="0">
-                        <FontIcon Glyph="&#xE76D;" FontSize="16"/>
-                    </RadioButton>
-
-                    <RadioButton x:Name="RectangleTool"
-                                 GroupName="DrawingTools"
-                                 Tag="Rectangle"
-                                 ToolTipService.ToolTip="Rectangle (R)"
-                                 Click="ToolRadioButton_Click"
-                                 Width="40" Height="40"
-                                 Padding="0"
-                                 MinWidth="0">
-                        <FontIcon Glyph="&#xE739;" FontSize="16"/>
-                    </RadioButton>
-
-                    <RadioButton x:Name="CircleTool"
-                                 GroupName="DrawingTools"
-                                 Tag="Circle"
-                                 ToolTipService.ToolTip="Circle (C)"
-                                 Click="ToolRadioButton_Click"
-                                 Width="40" Height="40"
-                                 Padding="0"
-                                 MinWidth="0">
-                        <FontIcon Glyph="&#xEA3A;" FontSize="16"/>
-                    </RadioButton>
-
-                    <RadioButton x:Name="TriangleTool"
-                                 GroupName="DrawingTools"
-                                 Tag="Triangle"
-                                 ToolTipService.ToolTip="Triangle (T)"
-                                 Click="ToolRadioButton_Click"
-                                 Width="40" Height="40"
-                                 Padding="0"
-                                 MinWidth="0">
-                        <FontIcon Glyph="&#xE879;" FontSize="16"/>
-                    </RadioButton>
-                </StackPanel>
-            </StackPanel>
-
-            <!-- Board Name and Unsaved Indicator -->
-            <StackPanel Grid.Column="3"
-                        Orientation="Horizontal"
-                        VerticalAlignment="Center"
-                        Margin="16,0,0,0">
+                        Spacing="8"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center">
                 <TextBlock Text="{x:Bind ViewModel.BoardName, Mode=OneWay}"
-                           Style="{StaticResource BodyStrongTextBlockStyle}"
-                           VerticalAlignment="Center"/>
+                           Style="{StaticResource BodyStrongTextBlockStyle}"/>
                 <FontIcon Glyph="&#xE7BA;"
                           FontSize="12"
                           Foreground="{ThemeResource SystemFillColorCautionBrush}"
-                          VerticalAlignment="Center"
-                          Margin="8,0,0,0"
                           Visibility="{x:Bind ViewModel.HasUnsavedChanges, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                           ToolTipService.ToolTip="Unsaved changes"/>
             </StackPanel>
 
             <!-- Stroke and Fill Settings -->
-            <StackPanel Grid.Column="4"
+            <StackPanel Grid.Column="3"
                         Orientation="Horizontal"
-                        Spacing="16">
+                        Spacing="12">
 
                 <!-- Stroke Thickness -->
                 <StackPanel Orientation="Horizontal" Spacing="8">

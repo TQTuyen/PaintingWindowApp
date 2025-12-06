@@ -61,11 +61,21 @@ public sealed partial class DrawingView : Page
         }
     }
 
-    private void ToolRadioButton_Click(object sender, RoutedEventArgs e)
+    private void ToolMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is RadioButton radioButton && radioButton.Tag is string toolName)
+        if (sender is MenuFlyoutItem item && item.CommandParameter is string toolName)
         {
-            ViewModel.SelectToolCommand.Execute(toolName);
+            CurrentToolIcon.Glyph = toolName switch
+            {
+                "Select" => "\uE7C9",
+                "Line" => "\uE76D",
+                "Rectangle" => "\uE739",
+                "Circle" => "\uEA3A",
+                "Oval" => "\uF138",
+                "Triangle" => "\uE879",
+                "Polygon" => "\uF408",
+                _ => "\uE7C9"
+            };
         }
     }
 
