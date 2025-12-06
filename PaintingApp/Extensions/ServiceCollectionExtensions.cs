@@ -23,6 +23,8 @@ namespace PaintingApp.Extensions
             services.AddSingleton<ShapeFactoryProvider>();
             services.AddSingleton<ShapeAdapterProvider>();
             services.AddSingleton<ShapeTransformerProvider>();
+            services.AddSingleton<ShapeResizerProvider>();
+            services.AddTransient<ResizeHandleManager>();
             services.AddSingleton<ViewModelLocator>();
 
             return services;

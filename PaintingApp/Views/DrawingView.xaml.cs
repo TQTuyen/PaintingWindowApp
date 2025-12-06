@@ -22,6 +22,8 @@ public sealed partial class DrawingView : Page
     private readonly ShapeRendererFactory _rendererFactory;
     private readonly ShapeFactoryProvider _factoryProvider;
     private readonly ShapeTransformerProvider _transformerProvider;
+    private readonly ShapeResizerProvider _resizerProvider;
+    private readonly ResizeHandleManager _handleManager;
 
     private bool _isDrawing;
     private Point _startPoint;
@@ -33,6 +35,10 @@ public sealed partial class DrawingView : Page
     private Point _dragOffset;
     private ShapeModel? _draggedShape;
 
+    private bool _isResizingShape;
+    private ResizeHandle _activeHandle;
+    private Point _resizeStartPoint;
+
     public DrawingView()
     {
         InitializeComponent();
@@ -40,6 +46,8 @@ public sealed partial class DrawingView : Page
         _rendererFactory = App.GetService<ShapeRendererFactory>();
         _factoryProvider = App.GetService<ShapeFactoryProvider>();
         _transformerProvider = App.GetService<ShapeTransformerProvider>();
+        _resizerProvider = App.GetService<ShapeResizerProvider>();
+        _handleManager = App.GetService<ResizeHandleManager>();
         DataContext = ViewModel;
 
         ViewModel.ShapesRendered += OnShapesRendered;
@@ -140,6 +148,17 @@ public sealed partial class DrawingView : Page
 
         if (ViewModel.SelectedTool == "Select")
         {
+            var handleHit = _handleManager.HitTestHandle(point);
+
+            if (handleHit != ResizeHandle.None && ViewModel.SelectedShape != null)
+            {
+                _isResizingShape = true;
+                _activeHandle = handleHit;
+                _resizeStartPoint = point;
+                DrawingCanvas.CapturePointer(e.Pointer);
+                return;
+            }
+
             var clickedShape = HitTestShape(point);
 
             if (clickedShape != null)
@@ -192,6 +211,17 @@ public sealed partial class DrawingView : Page
     {
         var currentPoint = e.GetCurrentPoint(DrawingCanvas).Position;
 
+        if (_isResizingShape && ViewModel.SelectedShape != null)
+        {
+            var resizer = _resizerProvider.GetResizer(ViewModel.SelectedShape.Type);
+            resizer.Resize(ViewModel.SelectedShape, _activeHandle, _resizeStartPoint, currentPoint);
+
+            _resizeStartPoint = currentPoint;
+
+            RenderAllShapes();
+            return;
+        }
+
         if (_isDraggingShape && _draggedShape != null)
         {
             var transformer = _transformerProvider.GetTransformer(_draggedShape.Type);
@@ -226,6 +256,15 @@ public sealed partial class DrawingView : Page
 
     private void DrawingCanvas_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
+        if (_isResizingShape)
+        {
+            _isResizingShape = false;
+            _activeHandle = ResizeHandle.None;
+            ViewModel.HasUnsavedChanges = true;
+            DrawingCanvas.ReleasePointerCapture(e.Pointer);
+            return;
+        }
+
         if (_isDraggingShape)
         {
             _isDraggingShape = false;
@@ -303,6 +342,8 @@ public sealed partial class DrawingView : Page
         Canvas.SetZIndex(_selectionAdorner, 10000);
 
         DrawingCanvas.Children.Add(_selectionAdorner);
+
+        _handleManager.ShowHandles(DrawingCanvas, bounds);
     }
 
     private void HideSelectionAdorner()
@@ -312,6 +353,7 @@ public sealed partial class DrawingView : Page
             DrawingCanvas.Children.Remove(_selectionAdorner);
             _selectionAdorner = null;
         }
+        _handleManager.HideHandles(DrawingCanvas);
     }
 
     private void StrokePresetColor_Click(object sender, ItemClickEventArgs e)
