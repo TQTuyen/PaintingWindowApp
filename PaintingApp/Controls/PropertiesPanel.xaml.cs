@@ -50,6 +50,20 @@ namespace PaintingApp.Controls
             StrokeThicknessNumberBox.Value = ViewModel.SelectedShape.StrokeThickness;
             FillColorPicker.Color = ViewModel.SelectedShape.FillColor;
 
+            // Update dash style combo box
+            var dashStyle = ViewModel.SelectedShape.StrokeDashStyle;
+            for (int i = 0; i < StrokeDashStyleComboBox.Items.Count; i++)
+            {
+                if (StrokeDashStyleComboBox.Items[i] is ComboBoxItem item &&
+                    item.Tag is string tag &&
+                    Enum.TryParse<StrokeDashStyle>(tag, out var itemStyle) &&
+                    itemStyle == dashStyle)
+                {
+                    StrokeDashStyleComboBox.SelectedIndex = i;
+                    break;
+                }
+            }
+
             _isUpdatingControls = false;
         }
 
@@ -91,6 +105,19 @@ namespace PaintingApp.Controls
             _isUpdatingControls = false;
 
             ShapePropertyChanged?.Invoke(this, ViewModel.SelectedShape);
+        }
+
+        private void StrokeDashStyleComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isUpdatingControls || ViewModel?.SelectedShape == null) return;
+
+            if (StrokeDashStyleComboBox.SelectedItem is ComboBoxItem item &&
+                item.Tag is string tag &&
+                Enum.TryParse<StrokeDashStyle>(tag, out var style))
+            {
+                ViewModel.SelectedShape.StrokeDashStyle = style;
+                ShapePropertyChanged?.Invoke(this, ViewModel.SelectedShape);
+            }
         }
 
         private void NoFill_Click(object sender, RoutedEventArgs e)

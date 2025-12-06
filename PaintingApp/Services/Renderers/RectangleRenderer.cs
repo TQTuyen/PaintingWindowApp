@@ -10,6 +10,13 @@ namespace PaintingApp.Services.Renderers;
 
 public class RectangleRenderer : IShapeRenderer
 {
+    private readonly IStrokeDashProvider _dashProvider;
+
+    public RectangleRenderer(IStrokeDashProvider dashProvider)
+    {
+        _dashProvider = dashProvider;
+    }
+
     public void Render(Canvas canvas, ShapeModel shape)
     {
         if (shape is not RectangleModel rectangle) return;
@@ -20,6 +27,7 @@ public class RectangleRenderer : IShapeRenderer
             Height = rectangle.Height,
             Stroke = new SolidColorBrush(rectangle.StrokeColor),
             StrokeThickness = rectangle.StrokeThickness,
+            StrokeDashArray = _dashProvider.GetDashArray(rectangle.StrokeDashStyle),
             Fill = new SolidColorBrush(rectangle.FillColor),
             Tag = shape
         };

@@ -26,6 +26,7 @@ public class CircleAdapter : BaseShapeAdapter, IShapeAdapter
             Type = ShapeType.Circle,
             StrokeColor = ColorToHex(circle.StrokeColor),
             StrokeThickness = circle.StrokeThickness,
+            StrokeStyle = circle.StrokeDashStyle.ToString(),
             FillColor = ColorToHex(circle.FillColor),
             ZIndex = circle.ZIndex,
             GeometryData = JsonSerializer.Serialize(geometryData)
@@ -47,6 +48,7 @@ public class CircleAdapter : BaseShapeAdapter, IShapeAdapter
             Radius = geometryData.Radius,
             StrokeColor = ParseColor(entity.StrokeColor),
             StrokeThickness = entity.StrokeThickness,
+            StrokeDashStyle = ParseStrokeDashStyle(entity.StrokeStyle),
             FillColor = ParseColor(entity.FillColor),
             ZIndex = entity.ZIndex
         };

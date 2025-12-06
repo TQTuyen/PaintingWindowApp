@@ -7,6 +7,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:PaintingApp.ViewModels"
     xmlns:controls="using:PaintingApp.Controls"
+    xmlns:models="using:PaintingApp.Models"
+    xmlns:local="using:PaintingApp.Views"
     mc:Ignorable="d"
     Background="Transparent">
 
@@ -204,6 +206,31 @@
                                SmallChange="0.5"
                                SpinButtonPlacementMode="Compact"
                                Width="70"/>
+                </StackPanel>
+
+                <!-- Stroke Dash Style Selector -->
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Style:"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource CaptionTextBlockStyle}"/>
+                    <ComboBox ItemsSource="{x:Bind ViewModel.AvailableDashStyles, Mode=OneWay}"
+                              SelectedItem="{x:Bind ViewModel.SelectedStrokeDashStyle, Mode=TwoWay}"
+                              MinWidth="110"
+                              ToolTipService.ToolTip="Stroke Dash Style">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:StrokeDashStyle">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Canvas Width="40" Height="16" VerticalAlignment="Center">
+                                        <Line X1="0" Y1="8" X2="40" Y2="8"
+                                              Stroke="{ThemeResource TextFillColorPrimaryBrush}"
+                                              StrokeThickness="2"
+                                              StrokeDashArray="{x:Bind local:DrawingView.GetDashArrayPreview((models:StrokeDashStyle))}"/>
+                                    </Canvas>
+                                    <TextBlock Text="{x:Bind}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                 </StackPanel>
 
                 <!-- Stroke Color with Presets -->
@@ -470,6 +497,7 @@
                                    Canvas.Top="5"
                                    Stroke="{x:Bind ViewModel.StrokeColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
                                    StrokeThickness="{x:Bind ViewModel.StrokeThickness, Mode=OneWay}"
+                                   StrokeDashArray="{x:Bind ViewModel.SelectedStrokeDashStyle, Mode=OneWay, Converter={StaticResource StrokeDashStyleToDoubleCollectionConverter}}"
                                    Fill="{x:Bind ViewModel.FillColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
                                    RadiusX="2"
                                    RadiusY="2"/>

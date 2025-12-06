@@ -57,11 +57,13 @@ public sealed partial class ProfileDialog : ContentDialog
 
         _selectedStrokeColor = _profile.DefaultStrokeColor ?? "#000000";
 
-        StrokeStyleComboBox.SelectedIndex = _profile.DefaultStrokeStyle?.ToLowerInvariant() switch
+        StrokeStyleComboBox.SelectedIndex = _profile.DefaultStrokeStyle switch
         {
-            "dashed" => 1,
-            "dotted" => 2,
-            _ => 0
+            "Dash" => 1,
+            "Dot" => 2,
+            "DashDot" => 3,
+            "DashDotDot" => 4,
+            _ => 0 // Solid
         };
 
         UpdateColorPreview();

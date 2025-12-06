@@ -10,6 +10,13 @@ namespace PaintingApp.Services.Renderers;
 
 public class CircleRenderer : IShapeRenderer
 {
+    private readonly IStrokeDashProvider _dashProvider;
+
+    public CircleRenderer(IStrokeDashProvider dashProvider)
+    {
+        _dashProvider = dashProvider;
+    }
+
     public void Render(Canvas canvas, ShapeModel shape)
     {
         if (shape is not CircleModel circle) return;
@@ -20,6 +27,7 @@ public class CircleRenderer : IShapeRenderer
             Height = circle.Radius * 2,
             Stroke = new SolidColorBrush(circle.StrokeColor),
             StrokeThickness = circle.StrokeThickness,
+            StrokeDashArray = _dashProvider.GetDashArray(circle.StrokeDashStyle),
             Fill = new SolidColorBrush(circle.FillColor),
             Tag = shape
         };

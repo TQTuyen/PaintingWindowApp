@@ -27,6 +27,7 @@ public class LineAdapter : BaseShapeAdapter, IShapeAdapter
             Type = ShapeType.Line,
             StrokeColor = ColorToHex(line.StrokeColor),
             StrokeThickness = line.StrokeThickness,
+            StrokeStyle = line.StrokeDashStyle.ToString(),
             FillColor = ColorToHex(line.FillColor),
             ZIndex = line.ZIndex,
             GeometryData = JsonSerializer.Serialize(geometryData)
@@ -48,6 +49,7 @@ public class LineAdapter : BaseShapeAdapter, IShapeAdapter
             EndPoint = new Point(geometryData.EndX, geometryData.EndY),
             StrokeColor = ParseColor(entity.StrokeColor),
             StrokeThickness = entity.StrokeThickness,
+            StrokeDashStyle = ParseStrokeDashStyle(entity.StrokeStyle),
             FillColor = ParseColor(entity.FillColor),
             ZIndex = entity.ZIndex
         };

@@ -106,6 +106,21 @@
                                    SpinButtonPlacementMode="Compact"
                                    ValueChanged="StrokeThicknessNumberBox_ValueChanged"/>
                     </StackPanel>
+
+                    <!-- Stroke Dash Style -->
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Dash Style"
+                                   Style="{StaticResource CaptionTextBlockStyle}"/>
+                        <ComboBox x:Name="StrokeDashStyleComboBox"
+                                  HorizontalAlignment="Stretch"
+                                  SelectionChanged="StrokeDashStyleComboBox_SelectionChanged">
+                            <ComboBoxItem Content="Solid" Tag="Solid"/>
+                            <ComboBoxItem Content="Dash" Tag="Dash"/>
+                            <ComboBoxItem Content="Dot" Tag="Dot"/>
+                            <ComboBoxItem Content="Dash-Dot" Tag="DashDot"/>
+                            <ComboBoxItem Content="Dash-Dot-Dot" Tag="DashDotDot"/>
+                        </ComboBox>
+                    </StackPanel>
                 </StackPanel>
 
                 <Border Height="1" 

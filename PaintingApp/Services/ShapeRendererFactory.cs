@@ -10,16 +10,16 @@ public class ShapeRendererFactory
 {
     private readonly Dictionary<ShapeType, IShapeRenderer> _renderers;
 
-    public ShapeRendererFactory()
+    public ShapeRendererFactory(IStrokeDashProvider dashProvider)
     {
         _renderers = new Dictionary<ShapeType, IShapeRenderer>
         {
-            { ShapeType.Line, new LineRenderer() },
-            { ShapeType.Rectangle, new RectangleRenderer() },
-            { ShapeType.Circle, new CircleRenderer() },
-            { ShapeType.Oval, new OvalRenderer() },
-            { ShapeType.Triangle, new PolygonRenderer() },
-            { ShapeType.Polygon, new PolygonRenderer() }
+            { ShapeType.Line, new LineRenderer(dashProvider) },
+            { ShapeType.Rectangle, new RectangleRenderer(dashProvider) },
+            { ShapeType.Circle, new CircleRenderer(dashProvider) },
+            { ShapeType.Oval, new OvalRenderer(dashProvider) },
+            { ShapeType.Triangle, new PolygonRenderer(dashProvider) },
+            { ShapeType.Polygon, new PolygonRenderer(dashProvider) }
         };
     }
 

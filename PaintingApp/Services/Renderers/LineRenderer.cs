@@ -10,6 +10,13 @@ namespace PaintingApp.Services.Renderers;
 
 public class LineRenderer : IShapeRenderer
 {
+    private readonly IStrokeDashProvider _dashProvider;
+
+    public LineRenderer(IStrokeDashProvider dashProvider)
+    {
+        _dashProvider = dashProvider;
+    }
+
     public void Render(Canvas canvas, ShapeModel shape)
     {
         if (shape is not LineModel line) return;
@@ -22,6 +29,7 @@ public class LineRenderer : IShapeRenderer
             Y2 = line.EndPoint.Y,
             Stroke = new SolidColorBrush(line.StrokeColor),
             StrokeThickness = line.StrokeThickness,
+            StrokeDashArray = _dashProvider.GetDashArray(line.StrokeDashStyle),
             Tag = shape
         };
 

@@ -22,6 +22,9 @@ public abstract partial class ShapeModel : ObservableObject
     private double _strokeThickness = 2.0;
 
     [ObservableProperty]
+    private StrokeDashStyle _strokeDashStyle = StrokeDashStyle.Solid;
+
+    [ObservableProperty]
     private Color _fillColor = Colors.Transparent;
 
     [ObservableProperty]

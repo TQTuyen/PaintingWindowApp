@@ -55,6 +55,9 @@ public partial class DrawingScreenViewModel : BaseViewModel
     private double _strokeThickness = 2.0;
 
     [ObservableProperty]
+    private StrokeDashStyle _selectedStrokeDashStyle = StrokeDashStyle.Solid;
+
+    [ObservableProperty]
     private Color _fillColor = Colors.Transparent;
 
     [ObservableProperty]
@@ -69,6 +72,15 @@ public partial class DrawingScreenViewModel : BaseViewModel
 
     [ObservableProperty]
     private bool _hasSelection;
+
+    public ObservableCollection<StrokeDashStyle> AvailableDashStyles { get; } =
+    [
+        StrokeDashStyle.Solid,
+        StrokeDashStyle.Dash,
+        StrokeDashStyle.Dot,
+        StrokeDashStyle.DashDot,
+        StrokeDashStyle.DashDotDot
+    ];
 
     partial void OnSelectedShapeChanged(ShapeModel? value)
     {
@@ -113,6 +125,7 @@ public partial class DrawingScreenViewModel : BaseViewModel
             CanvasHeight = CurrentProfile.DefaultCanvasHeight;
             StrokeThickness = CurrentProfile.DefaultStrokeThickness;
             StrokeColor = ParseColor(CurrentProfile.DefaultStrokeColor);
+            SelectedStrokeDashStyle = ParseStrokeDashStyle(CurrentProfile.DefaultStrokeStyle);
         }
     }
 
@@ -395,6 +408,16 @@ public partial class DrawingScreenViewModel : BaseViewModel
     private void DeselectShape()
     {
         SelectedShape = null;
+    }
+
+    private static StrokeDashStyle ParseStrokeDashStyle(string? strokeStyle)
+    {
+        if (string.IsNullOrEmpty(strokeStyle))
+            return StrokeDashStyle.Solid;
+
+        return Enum.TryParse<StrokeDashStyle>(strokeStyle, true, out var result)
+            ? result
+            : StrokeDashStyle.Solid;
     }
 
     private static Color ParseColor(string? hex)

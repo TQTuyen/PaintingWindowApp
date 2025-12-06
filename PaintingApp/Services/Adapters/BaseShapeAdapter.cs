@@ -1,5 +1,6 @@
 using System;
 using Microsoft.UI;
+using PaintingApp.Models;
 using Windows.UI;
 
 namespace PaintingApp.Services.Adapters;
@@ -29,5 +30,15 @@ public abstract class BaseShapeAdapter
         }
 
         return Colors.Transparent;
+    }
+
+    protected static StrokeDashStyle ParseStrokeDashStyle(string? strokeStyle)
+    {
+        if (string.IsNullOrEmpty(strokeStyle))
+            return StrokeDashStyle.Solid;
+
+        return Enum.TryParse<StrokeDashStyle>(strokeStyle, true, out var result)
+            ? result
+            : StrokeDashStyle.Solid;
     }
 }

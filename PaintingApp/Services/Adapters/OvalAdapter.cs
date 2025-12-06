@@ -27,6 +27,7 @@ public class OvalAdapter : BaseShapeAdapter, IShapeAdapter
             Type = ShapeType.Oval,
             StrokeColor = ColorToHex(oval.StrokeColor),
             StrokeThickness = oval.StrokeThickness,
+            StrokeStyle = oval.StrokeDashStyle.ToString(),
             FillColor = ColorToHex(oval.FillColor),
             ZIndex = oval.ZIndex,
             GeometryData = JsonSerializer.Serialize(geometryData)
@@ -49,6 +50,7 @@ public class OvalAdapter : BaseShapeAdapter, IShapeAdapter
             RadiusY = geometryData.RadiusY,
             StrokeColor = ParseColor(entity.StrokeColor),
             StrokeThickness = entity.StrokeThickness,
+            StrokeDashStyle = ParseStrokeDashStyle(entity.StrokeStyle),
             FillColor = ParseColor(entity.FillColor),
             ZIndex = entity.ZIndex
         };

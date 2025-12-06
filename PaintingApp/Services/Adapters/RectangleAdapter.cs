@@ -27,6 +27,7 @@ public class RectangleAdapter : BaseShapeAdapter, IShapeAdapter
             Type = ShapeType.Rectangle,
             StrokeColor = ColorToHex(rect.StrokeColor),
             StrokeThickness = rect.StrokeThickness,
+            StrokeStyle = rect.StrokeDashStyle.ToString(),
             FillColor = ColorToHex(rect.FillColor),
             ZIndex = rect.ZIndex,
             GeometryData = JsonSerializer.Serialize(geometryData)
@@ -49,6 +50,7 @@ public class RectangleAdapter : BaseShapeAdapter, IShapeAdapter
             Height = geometryData.Height,
             StrokeColor = ParseColor(entity.StrokeColor),
             StrokeThickness = entity.StrokeThickness,
+            StrokeDashStyle = ParseStrokeDashStyle(entity.StrokeStyle),
             FillColor = ParseColor(entity.FillColor),
             ZIndex = entity.ZIndex
         };

@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -57,6 +58,19 @@ public sealed partial class DrawingView : Page
         DataContext = ViewModel;
 
         ViewModel.ShapesRendered += OnShapesRendered;
+    }
+
+    public static DoubleCollection? GetDashArrayPreview(StrokeDashStyle style)
+    {
+        return style switch
+        {
+            StrokeDashStyle.Solid => null,
+            StrokeDashStyle.Dash => [4, 2],
+            StrokeDashStyle.Dot => [1, 2],
+            StrokeDashStyle.DashDot => [4, 2, 1, 2],
+            StrokeDashStyle.DashDotDot => [4, 2, 1, 2, 1, 2],
+            _ => null
+        };
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -257,6 +271,11 @@ public sealed partial class DrawingView : Page
             ViewModel.FillColor
         );
 
+        if (_currentShape != null)
+        {
+            _currentShape.StrokeDashStyle = ViewModel.SelectedStrokeDashStyle;
+        }
+
         DrawingCanvas.CapturePointer(e.Pointer);
     }
 
@@ -298,6 +317,7 @@ public sealed partial class DrawingView : Page
 
         _currentShape.StrokeColor = ViewModel.StrokeColor;
         _currentShape.StrokeThickness = ViewModel.StrokeThickness;
+        _currentShape.StrokeDashStyle = ViewModel.SelectedStrokeDashStyle;
         _currentShape.FillColor = ViewModel.FillColor;
 
         DrawingCanvas.Children.Clear();

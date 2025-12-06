@@ -138,8 +138,10 @@
                               HorizontalAlignment="Stretch"
                               SelectedIndex="0">
                         <ComboBoxItem Content="Solid" Tag="Solid"/>
-                        <ComboBoxItem Content="Dashed" Tag="Dashed"/>
-                        <ComboBoxItem Content="Dotted" Tag="Dotted"/>
+                        <ComboBoxItem Content="Dash" Tag="Dash"/>
+                        <ComboBoxItem Content="Dot" Tag="Dot"/>
+                        <ComboBoxItem Content="Dash-Dot" Tag="DashDot"/>
+                        <ComboBoxItem Content="Dash-Dot-Dot" Tag="DashDotDot"/>
                     </ComboBox>
                 </StackPanel>
             </StackPanel>

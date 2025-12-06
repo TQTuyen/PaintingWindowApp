@@ -10,6 +10,13 @@ namespace PaintingApp.Services.Renderers;
 
 public class OvalRenderer : IShapeRenderer
 {
+    private readonly IStrokeDashProvider _dashProvider;
+
+    public OvalRenderer(IStrokeDashProvider dashProvider)
+    {
+        _dashProvider = dashProvider;
+    }
+
     public void Render(Canvas canvas, ShapeModel shape)
     {
         if (shape is not OvalModel oval) return;
@@ -20,6 +27,7 @@ public class OvalRenderer : IShapeRenderer
             Height = oval.RadiusY * 2,
             Stroke = new SolidColorBrush(oval.StrokeColor),
             StrokeThickness = oval.StrokeThickness,
+            StrokeDashArray = _dashProvider.GetDashArray(oval.StrokeDashStyle),
             Fill = new SolidColorBrush(oval.FillColor),
             Tag = shape
         };

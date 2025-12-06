@@ -18,6 +18,7 @@
             <helpers:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
             <helpers:IndexToVisibilityConverter x:Key="IndexToVisibilityConverter"/>
             <helpers:DateTimeToLocalStringConverter x:Key="DateTimeToLocalStringConverter"/>
+            <helpers:StrokeDashStyleToDoubleCollectionConverter x:Key="StrokeDashStyleToDoubleCollectionConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

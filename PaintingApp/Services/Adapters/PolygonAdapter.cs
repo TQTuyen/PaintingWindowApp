@@ -26,6 +26,7 @@ public class PolygonAdapter : BaseShapeAdapter, IShapeAdapter
             Type = ShapeType.Polygon,
             StrokeColor = ColorToHex(polygon.StrokeColor),
             StrokeThickness = polygon.StrokeThickness,
+            StrokeStyle = polygon.StrokeDashStyle.ToString(),
             FillColor = ColorToHex(polygon.FillColor),
             ZIndex = polygon.ZIndex,
             GeometryData = JsonSerializer.Serialize(geometryData)
@@ -46,6 +47,7 @@ public class PolygonAdapter : BaseShapeAdapter, IShapeAdapter
             Points = geometryData.Points.Select(p => new Point(p.X, p.Y)).ToList(),
             StrokeColor = ParseColor(entity.StrokeColor),
             StrokeThickness = entity.StrokeThickness,
+            StrokeDashStyle = ParseStrokeDashStyle(entity.StrokeStyle),
             FillColor = ParseColor(entity.FillColor),
             ZIndex = entity.ZIndex
         };

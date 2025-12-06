@@ -10,6 +10,13 @@ namespace PaintingApp.Services.Renderers;
 
 public class PolygonRenderer : IShapeRenderer
 {
+    private readonly IStrokeDashProvider _dashProvider;
+
+    public PolygonRenderer(IStrokeDashProvider dashProvider)
+    {
+        _dashProvider = dashProvider;
+    }
+
     public void Render(Canvas canvas, ShapeModel shape)
     {
         var points = shape.GetPoints();
@@ -19,6 +26,7 @@ public class PolygonRenderer : IShapeRenderer
         {
             Stroke = new SolidColorBrush(shape.StrokeColor),
             StrokeThickness = shape.StrokeThickness,
+            StrokeDashArray = _dashProvider.GetDashArray(shape.StrokeDashStyle),
             Fill = new SolidColorBrush(shape.FillColor),
             Tag = shape
         };
