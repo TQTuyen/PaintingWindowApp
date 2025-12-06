@@ -1,13 +1,11 @@
 using System;
 using System.ComponentModel;
-using System.Linq;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
 using PaintingApp.Contracts;
 using PaintingApp.Models;
 using PaintingApp.Services;
@@ -23,6 +21,7 @@ public sealed partial class DrawingView : Page
 
     private readonly ShapeRendererFactory _rendererFactory;
     private readonly ShapeFactoryProvider _factoryProvider;
+    private readonly ShapeTransformerProvider _transformerProvider;
 
     private bool _isDrawing;
     private Point _startPoint;
@@ -30,12 +29,17 @@ public sealed partial class DrawingView : Page
     private IShapeFactory? _currentFactory;
     private Border? _selectionAdorner;
 
+    private bool _isDraggingShape;
+    private Point _dragOffset;
+    private ShapeModel? _draggedShape;
+
     public DrawingView()
     {
         InitializeComponent();
         ViewModel = App.GetService<DrawingScreenViewModel>();
         _rendererFactory = App.GetService<ShapeRendererFactory>();
         _factoryProvider = App.GetService<ShapeFactoryProvider>();
+        _transformerProvider = App.GetService<ShapeTransformerProvider>();
         DataContext = ViewModel;
 
         ViewModel.ShapesRendered += OnShapesRendered;
@@ -140,7 +144,25 @@ public sealed partial class DrawingView : Page
 
             if (clickedShape != null)
             {
-                ViewModel.SelectedShape = clickedShape;
+                if (ViewModel.SelectedShape == clickedShape)
+                {
+                    _isDraggingShape = true;
+                    _draggedShape = clickedShape;
+
+                    var transformer = _transformerProvider.GetTransformer(clickedShape.Type);
+                    var referencePoint = transformer.GetReferencePoint(clickedShape);
+
+                    _dragOffset = new Point(
+                        point.X - referencePoint.X,
+                        point.Y - referencePoint.Y
+                    );
+
+                    DrawingCanvas.CapturePointer(e.Pointer);
+                }
+                else
+                {
+                    ViewModel.SelectedShape = clickedShape;
+                }
             }
             else
             {
@@ -168,9 +190,27 @@ public sealed partial class DrawingView : Page
 
     private void DrawingCanvas_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
+        var currentPoint = e.GetCurrentPoint(DrawingCanvas).Position;
+
+        if (_isDraggingShape && _draggedShape != null)
+        {
+            var transformer = _transformerProvider.GetTransformer(_draggedShape.Type);
+            var oldReference = transformer.GetReferencePoint(_draggedShape);
+
+            var newReferenceX = currentPoint.X - _dragOffset.X;
+            var newReferenceY = currentPoint.Y - _dragOffset.Y;
+
+            var deltaX = newReferenceX - oldReference.X;
+            var deltaY = newReferenceY - oldReference.Y;
+
+            transformer.Translate(_draggedShape, deltaX, deltaY);
+
+            RenderAllShapes();
+            return;
+        }
+
         if (!_isDrawing || _currentShape == null || _currentFactory == null) return;
 
-        var currentPoint = e.GetCurrentPoint(DrawingCanvas).Position;
         _currentFactory.UpdateShape(_currentShape, _startPoint, currentPoint);
 
         _currentShape.StrokeColor = ViewModel.StrokeColor;
@@ -186,6 +226,15 @@ public sealed partial class DrawingView : Page
 
     private void DrawingCanvas_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
+        if (_isDraggingShape)
+        {
+            _isDraggingShape = false;
+            _draggedShape = null;
+            ViewModel.HasUnsavedChanges = true;
+            DrawingCanvas.ReleasePointerCapture(e.Pointer);
+            return;
+        }
+
         if (!_isDrawing || _currentShape == null || _currentFactory == null)
         {
             _isDrawing = false;
