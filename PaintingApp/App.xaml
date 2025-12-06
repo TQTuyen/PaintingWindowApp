@@ -19,6 +19,8 @@
             <helpers:IndexToVisibilityConverter x:Key="IndexToVisibilityConverter"/>
             <helpers:DateTimeToLocalStringConverter x:Key="DateTimeToLocalStringConverter"/>
             <helpers:StrokeDashStyleToDoubleCollectionConverter x:Key="StrokeDashStyleToDoubleCollectionConverter"/>
+            <helpers:DoubleToPercentageConverter x:Key="DoubleToPercentageConverter"/>
+            <helpers:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

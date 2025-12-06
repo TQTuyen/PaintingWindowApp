@@ -106,6 +106,16 @@ public class ShapeRepository : IShapeRepository
             .ToDictionaryAsync(x => x.Type, x => x.Count);
     }
 
+    public async Task<Dictionary<ShapeType, int>> GetShapeTypeStatisticsByProfileIdAsync(int profileId)
+    {
+        return await _context.Shapes
+            .AsNoTracking()
+            .Where(s => s.DrawingBoard != null && s.DrawingBoard.ProfileId == profileId)
+            .GroupBy(s => s.Type)
+            .Select(g => new { Type = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Type, x => x.Count);
+    }
+
     public async Task DeleteByDrawingBoardIdAsync(int boardId)
     {
         var shapes = await _context.Shapes

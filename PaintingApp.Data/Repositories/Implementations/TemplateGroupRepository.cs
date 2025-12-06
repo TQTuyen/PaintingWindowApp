@@ -85,6 +85,16 @@ public class TemplateGroupRepository : ITemplateGroupRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<TemplateGroup>> GetTopUsedByProfileIdAsync(int profileId, int count = 10)
+    {
+        return await _context.TemplateGroups
+            .AsNoTracking()
+            .Where(t => t.ProfileId == profileId)
+            .OrderByDescending(t => t.UsageCount)
+            .Take(count)
+            .ToListAsync();
+    }
+
     public async Task IncrementUsageCountAsync(int id)
     {
         await _context.TemplateGroups
