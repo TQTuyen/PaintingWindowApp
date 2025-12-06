@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:PaintingApp.Controls"
+    xmlns:models="using:PaintingApp.Models"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
@@ -13,7 +14,7 @@
           BorderThickness="1,0,0,0"
           Padding="16">
         
-        <ScrollViewer Visibility="{x:Bind HasSelection, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+        <ScrollViewer Visibility="{x:Bind ViewModel.HasSelection, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
             <StackPanel Spacing="16">
                 
                 <TextBlock Text="Shape Properties"
@@ -24,9 +25,28 @@
                     <TextBlock Text="Type"
                                Style="{StaticResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                    <TextBlock Text="{x:Bind SelectedShape.Type, Mode=OneWay}"
+                    <TextBlock Text="{x:Bind ViewModel.SelectedShape.Type, Mode=OneWay}"
                                Style="{StaticResource BodyStrongTextBlockStyle}"/>
                 </StackPanel>
+
+                <Border Height="1" 
+                        Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+
+                <!-- Dynamic Properties -->
+                <ItemsControl ItemsSource="{x:Bind ViewModel.Properties, Mode=OneWay}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:EditableProperty">
+                            <StackPanel Spacing="4" Margin="0,0,0,8">
+                                <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
+                                           Style="{StaticResource CaptionTextBlockStyle}"/>
+                                <NumberBox Value="{x:Bind DoubleValue, Mode=TwoWay}"
+                                           Minimum="{x:Bind MinimumValue, Mode=OneWay}"
+                                           Maximum="{x:Bind MaximumValue, Mode=OneWay}"
+                                           SpinButtonPlacementMode="Compact"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
 
                 <Border Height="1" 
                         Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
@@ -49,7 +69,7 @@
                                 
                                 <Border Grid.Column="0"
                                         Width="32" Height="32"
-                                        Background="{x:Bind SelectedShape.StrokeColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
+                                        Background="{x:Bind ViewModel.SelectedShape.StrokeColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
                                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                         BorderThickness="1"
                                         CornerRadius="4"
@@ -112,7 +132,7 @@
                                 
                                 <Border Grid.Column="0"
                                         Width="32" Height="32"
-                                        Background="{x:Bind SelectedShape.FillColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
+                                        Background="{x:Bind ViewModel.SelectedShape.FillColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
                                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                         BorderThickness="1"
                                         CornerRadius="4"
@@ -141,7 +161,7 @@
                 <StackPanel Spacing="8">
                     <Button Content="Delete Shape"
                             HorizontalAlignment="Stretch"
-                            Click="DeleteShape_Click">
+                            Command="{x:Bind ViewModel.DeleteShapeCommand}">
                         <Button.KeyboardAccelerators>
                             <KeyboardAccelerator Key="Delete"/>
                         </Button.KeyboardAccelerators>
@@ -155,7 +175,7 @@
         <StackPanel HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Spacing="8"
-                    Visibility="{x:Bind HasSelection, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                    Visibility="{x:Bind ViewModel.HasSelection, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}">
             <FontIcon Glyph="&#xE7C9;" 
                       FontSize="48"
                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>

@@ -26,6 +26,7 @@ namespace PaintingApp.Extensions
             services.AddSingleton<ShapeResizerProvider>();
             services.AddTransient<ResizeHandleManager>();
             services.AddSingleton<ViewModelLocator>();
+            services.AddSingleton<ShapePropertyProviderFactory>();
 
             return services;
         }
@@ -35,6 +36,7 @@ namespace PaintingApp.Extensions
             services.AddTransient<MainScreenViewModel>();
             services.AddTransient<ManagementViewModel>();
             services.AddTransient<DrawingScreenViewModel>();
+            services.AddTransient<PropertiesPanelViewModel>();
 
             return services;
         }
